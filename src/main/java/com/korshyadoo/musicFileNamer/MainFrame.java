@@ -105,25 +105,36 @@ public class MainFrame extends JFrame {
 
 		JButton btnDownArrow = createDownArrowButton();
 		buttonPanel.add(btnDownArrow);
-		
+
 		JButton btnSave = new JButton("Save");
-		int btnSavetWidth = (int)(btnSave.getPreferredSize().getWidth());
-		int btnSaveHeight = (int)(btnUpArrow.getPreferredSize().getHeight());
+		int btnSavetWidth = (int) (btnSave.getPreferredSize().getWidth());
+		int btnSaveHeight = (int) (btnUpArrow.getPreferredSize().getHeight());
 		Dimension saveDimension = new Dimension(btnSavetWidth, btnSaveHeight);
 		btnSave.setPreferredSize(saveDimension);
 		btnSave.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				List<String> results = new ArrayList<>();
-				for(int index = 0; index < listModel.getSize(); index++) {
+				for (int index = 0; index < listModel.getSize(); index++) {
 					results.add(listModel.get(index));
 				}
 				FileProcessor fp = new FileProcessor(results);
 				List<String> proposedList = fp.getProposedList();
-				
-				//Create a confirm JOptionPane with proposed list
-				
-				
+
+				// Create a confirm JOptionPane with proposed list
+				Object[] options = { "Continue", "Cancel" };
+				int result = JOptionPane.showOptionDialog(MainFrame.this, 
+														generateMessageText(proposedList), 
+														"Confirm", JOptionPane.YES_NO_OPTION,
+														JOptionPane.QUESTION_MESSAGE, 
+														null, 
+														options, 
+														options[1]);
+
+				if (result == JOptionPane.YES_OPTION) {
+					fp.upateFiles();
+				}
+				loadListPanelContents();		//Refresh the list panel with the new file names
 			}
 		});
 		buttonPanel.add(btnSave);
@@ -144,6 +155,17 @@ public class MainFrame extends JFrame {
 			}
 		});
 		buttonPanel.add(btnRestart);
+	}
+	
+	private String generateMessageText(List<String> list) {
+		String li = "<li>";
+		String endLi = "</li>";
+		StringBuilder result = new StringBuilder("<html>The new file names will be:<br><ol style=\"list-style-type: disc\">");
+		for(int index = 0; index < list.size(); index++) {
+			result = result.append(li + list.get(index) + endLi);
+		}
+		result = result.append("</html>");
+		return result.toString();
 	}
 	
 	

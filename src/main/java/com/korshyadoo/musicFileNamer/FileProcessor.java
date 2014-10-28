@@ -155,7 +155,7 @@ public class FileProcessor {
 		//etc.
 		
 		if(state == State.READY) {
-			
+			System.out.println("Updating files");
 			
 			
 			
