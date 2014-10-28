@@ -21,7 +21,6 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.ListModel;
 import javax.swing.border.EmptyBorder;
 
 import com.korshyadoo.musicFileNamer.conf.Configuration;
@@ -75,6 +74,7 @@ public class MainFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				// Open a file browser to choose a location
 				JFileChooser fc = new JFileChooser();
+				fc.setCurrentDirectory(ProgramLauncher.config.getDefaultDirectory());
 				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				int returnVal = fc.showDialog(MainFrame.this, "Select");
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -114,8 +114,14 @@ public class MainFrame extends JFrame {
 		btnSave.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				List<String> results = new ArrayList<>();
+				for(int index = 0; index < listModel.getSize(); index++) {
+					results.add(listModel.get(index));
+				}
+				FileProcessor fp = new FileProcessor(results);
+				List<String> proposedList = fp.getProposedList();
 				
-				
+				//Create a confirm JOptionPane with proposed list
 				
 				
 			}
@@ -217,7 +223,7 @@ public class MainFrame extends JFrame {
 		listModel = new DefaultListModel<>();
 		File[] listOfFiles = selectedDirectory.listFiles();
 		for(File file : listOfFiles) {
-			if(!file.isDirectory()) {
+			if(!file.isDirectory() && !file.isHidden()) {
 				listModel.addElement(file.getName());
 			}
 		}
