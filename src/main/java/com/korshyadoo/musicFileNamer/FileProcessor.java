@@ -7,11 +7,10 @@ import java.util.List;
 public class FileProcessor {
 	final private List<String> fileList;
 	private List<String> proposedList;
-	private State state = State.UNINITIALIZED;
 	private int startingNumber;
 	private int numberOfDigits;
 	private PrefixFormats pattern;
-	
+
 	public FileProcessor(List<String> fileList, int startingNumber, PrefixFormats pattern) {
 		this.fileList = fileList;
 		this.startingNumber = startingNumber;
@@ -20,107 +19,101 @@ public class FileProcessor {
 		System.out.println("number of digits: " + numberOfDigits);
 		processList();
 	}
-	
+
 	private int findNumberOfDigitsIn(int source) {
 		int count = 0;
 		do {
 			source /= 10;
 			count++;
-		} while(source > 0);
-		
+		} while (source > 0);
+
 		return count;
 	}
-	
+
 	/**
 	 * This method examines the list of Files passed at object creation and makes a new list with the proposed name changes.
 	 */
 	private void processList() {
-		if(state == State.UNINITIALIZED) {
-			proposedList = new ArrayList<>();
-			
-			int count = startingNumber;
-			for(int index = 0; index < fileList.size(); index++) {
-				List<String> splitName = splitNameAndExtension(index);
-				String fileNameBase = splitName.get(0);
-				String extension = splitName.get(1);
-				int indexOfName = findIndexOfName(fileNameBase);
-				String prefix = convertToTwoDigit(count) + pattern.toString();
-				String suffix = fileNameBase.substring(indexOfName);
-				String newName = prefix + suffix + extension;
-				proposedList.add(newName);
-				count++;
-			}
-			
-		}
-		if(fileList.size() == proposedList.size()) {
-			state = State.READY;
-		} else {
-			state = State.ERROR1;
+		proposedList = new ArrayList<>();
+
+		int count = startingNumber;
+		for (int index = 0; index < fileList.size(); index++) {
+			List<String> splitName = splitNameAndExtension(index);
+			String fileNameBase = splitName.get(0);
+			String extension = splitName.get(1);
+			int indexOfName = findIndexOfName(fileNameBase);
+			String prefix = convertToTwoDigit(count) + pattern.toString();
+			String suffix = fileNameBase.substring(indexOfName);
+			String newName = prefix + suffix + extension;
+			proposedList.add(newName);
+			count++;
 		}
 	}
 
 	private int indexOfFirstAlphaIn(String str) {
 		String[] strSplit = str.split("\\p{Alpha}", 2);
 		int indexOfFirstAlpha = strSplit[0].length();
-		if(indexOfFirstAlpha >= str.length()) {
+		if (indexOfFirstAlpha >= str.length()) {
 			indexOfFirstAlpha = -1;
 		}
 		return indexOfFirstAlpha;
 	}
-	
+
 	private int indexOfFirstWhiteSpaceCharacterIn(String str) {
-		String [] strSplit = str.split("\\s", 2);
+		String[] strSplit = str.split("\\s", 2);
 		int indexOfFirstWhitespace = strSplit[0].length();
-		if(indexOfFirstWhitespace >= str.length()) {
+		if (indexOfFirstWhitespace >= str.length()) {
 			indexOfFirstWhitespace = -1;
 		}
 		return indexOfFirstWhitespace;
 	}
-	
+
 	private int indexOfFirstAlphaNumericIn(String str) {
 		String[] strSplit = str.split("\\w", 2);
 		int indexOfNextAlphaNumeric = strSplit[0].length();
-		if(indexOfNextAlphaNumeric >= str.length()) {
+		if (indexOfNextAlphaNumeric >= str.length()) {
 			indexOfNextAlphaNumeric = -1;
 		}
 		return indexOfNextAlphaNumeric;
 	}
-	
+
 	/**
-	 * Finds the index within the fileName String where the name of the file begins. 
-	 * For example: if the filename is "01 Born To Be Wild", the index of the name is 3
-	 * @param fileName The passed fileName
+	 * Finds the index within the fileName String where the name of the file begins. For example: if the filename is "01 Born To Be Wild", the index of the name
+	 * is 3
+	 * 
+	 * @param fileName
+	 *            The passed fileName
 	 * @return The index of the beginning of the name
 	 */
 	private int findIndexOfName(String fileName) {
-		//Find the index of the first '-'
+		// Find the index of the first '-'
 		int indexOfFirstHyphen = fileName.indexOf('-');
-		
-		//Find the index of the first alpha character
+
+		// Find the index of the first alpha character
 		int indexOfFirstAlpha = indexOfFirstAlphaIn(fileName);
-		
-		//Find the index of the first whitespace character
+
+		// Find the index of the first whitespace character
 		int indexOfFirstWhitespace = indexOfFirstWhiteSpaceCharacterIn(fileName);
-		
+
 		int nameIndex = -1;
-		
-		//1. Find a hyphen, if it has no words before it, then the first non-whitespace char after the hyphen starts the name
-		if(indexOfFirstHyphen != -1 && indexOfFirstHyphen < indexOfFirstAlpha) {
-			//nameIndex is the index of the first alpha after the hyphen
+
+		// 1. Find a hyphen, if it has no words before it, then the first non-whitespace char after the hyphen starts the name
+		if (indexOfFirstHyphen != -1 && indexOfFirstHyphen < indexOfFirstAlpha) {
+			// nameIndex is the index of the first alpha after the hyphen
 			String buffer = fileName.substring(indexOfFirstHyphen + 1);
 			int indexOfFirstAlphaNumbericInBuffer = indexOfFirstAlphaNumericIn(buffer);
-			if(indexOfFirstAlphaNumbericInBuffer != -1) {
+			if (indexOfFirstAlphaNumbericInBuffer != -1) {
 				nameIndex = (indexOfFirstHyphen + 1) + indexOfFirstAlphaNumericIn(buffer);
 			} else {
 				nameIndex = indexOfFirstHyphen + 1;
 			}
 		} else {
-			//There are words before the hyphen
-			//2. Find a space, if there are no words before the space, the first non-whitespace char after the space starts the name
-			if(indexOfFirstWhitespace != -1 && indexOfFirstWhitespace < indexOfFirstAlpha) {
+			// There are words before the hyphen
+			// 2. Find a space, if there are no words before the space, the first non-whitespace char after the space starts the name
+			if (indexOfFirstWhitespace != -1 && indexOfFirstWhitespace < indexOfFirstAlpha) {
 				String buffer = fileName.substring(indexOfFirstWhitespace + 1);
 				int indexOfFirstAlphaNumbericInBuffer = indexOfFirstAlphaNumericIn(buffer);
-				if(indexOfFirstAlphaNumbericInBuffer != -1) {
+				if (indexOfFirstAlphaNumbericInBuffer != -1) {
 					nameIndex = (indexOfFirstWhitespace + 1) + indexOfFirstAlphaNumericIn(buffer);
 				} else {
 					nameIndex = indexOfFirstWhitespace + 1;
@@ -129,34 +122,37 @@ public class FileProcessor {
 				nameIndex = 0;
 			}
 		}
-		
+
 		return nameIndex;
 	}
-	
+
 	/**
 	 * Converts the passed int into a String. If the number is between 0 and 9, inclusive, a "0" is concatenated to the beginning.
-	 * @param num The int to convert
+	 * 
+	 * @param num
+	 *            The int to convert
 	 * @return The passed int with a prefixed "0", if the passed int is a one-digit integer. Otherwise, the int is converted to a String and returned unaltered.
 	 */
 	private String convertToTwoDigit(int num) {
 		String result = Integer.toString(num);
-		if(num < 10 && num >= 0) {
-			result = "0" + result; 
+		if (num < 10 && num >= 0) {
+			result = "0" + result;
 		}
 		return result;
 	}
-	
-	
+
 	/**
 	 * Gets the name of the file at the passed index, removing the extension
-	 * @param index The index in the fileList to retrieve the file name from
+	 * 
+	 * @param index
+	 *            The index in the fileList to retrieve the file name from
 	 * @return The name of the file at the passed index, without the extension
 	 */
 	private List<String> splitNameAndExtension(int index) {
 		String fileName = fileList.get(index);
 		int extensionIndex = fileName.lastIndexOf('.');
 		String extension = fileName.substring(extensionIndex);
-		if(extensionIndex != -1) {
+		if (extensionIndex != -1) {
 			fileName = fileName.substring(0, extensionIndex);
 		}
 		List<String> results = new ArrayList<>();
@@ -164,70 +160,33 @@ public class FileProcessor {
 		results.add(extension);
 		return results;
 	}
-	
-	public List<String> getProposedList() throws IllegalStateException {
-		if(state == State.READY) {
-			List<String> results = new ArrayList<>(proposedList);
-			return results;
-		} else {
-			throw new IllegalStateException("Cannot retrieve the proposed list when object is not in the ready state. Current object state is " + state.toString());
-		}
+
+	public List<String> getProposedList() {
+		List<String> results = new ArrayList<>(proposedList);
+		return results;
 	}
-	
+
 	/**
 	 * This method accesses the file system to make the proposed changes to the list of files
+	 * 
 	 * @return {@code true} if successful; otherwise {@code false}
 	 */
-	public void upateFiles() throws IllegalStateException {
-		//fileList[0] is renamed to proposedList[0]
-		//fileList[1] is renamed to proposedList[1]
-		//etc.
-		if(state == State.READY) {
-			System.out.println("Updating files");
-			for(int index = 0; index < fileList.size(); index++) {
-				File oldFile = new File(MainFrame.getSelectedDirectory().toString() + "\\" + fileList.get(index));
-				File newFile = new File(MainFrame.getSelectedDirectory().toString() + "\\" + proposedList.get(index));
-				if(newFile.exists()) {
-					//Can't rename the file because the new filename already exists
-					System.out.println("Can't rename the file because the new filename already exists");
-				} else {
-					boolean result = oldFile.renameTo(newFile);
-					if(!result) {
-						boolean canWrite = oldFile.canWrite();
-						System.out.println(canWrite);
-					}
+	public void upateFiles() {
+		System.out.println("Updating files");
+		for (int index = 0; index < fileList.size(); index++) {
+			File oldFile = new File(MainFrame.getSelectedDirectory().toString() + "\\" + fileList.get(index));
+			File newFile = new File(MainFrame.getSelectedDirectory().toString() + "\\" + proposedList.get(index));
+			if (newFile.exists()) {
+				// Can't rename the file because the new filename already exists
+				System.out.println("Can't rename the file because the new filename already exists");
+			} else {
+				boolean success = oldFile.renameTo(newFile);
+				if (!success) {
+					boolean canWrite = oldFile.canWrite();
+					System.out.println("Renamed failed: canWrite() = " + canWrite);
 				}
 			}
-		} else {
-			throw new IllegalStateException("Cannot update file system when object is not in the ready state. Current object state is " + state.toString());
 		}
 	}
-	
-	private enum State {
-		UNINITIALIZED {
-			@Override
-			public String toString() {
-				return "UNINITIALIZED";
-			}
-		},
-		READY {
-			@Override
-			public String toString() {
-				return "READY";
-			}
-		},
-		DEAD {
-			@Override
-			public String toString() {
-				return "DEAD";
-			}
-		},
-		ERROR1 {
-			@Override
-			public String toString() {
-				return "ERROR: Proposed file list and original file list sizes do not match";
-			}
-		};
-	}
-	
+
 }
