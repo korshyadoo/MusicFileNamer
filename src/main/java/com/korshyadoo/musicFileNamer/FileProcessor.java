@@ -1,18 +1,32 @@
 package com.korshyadoo.musicFileNamer;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 public class FileProcessor {
 	final private List<String> fileList;
-	private Set<String> proposedList;
+	private List<String> proposedList;
 	private State state = State.UNINITIALIZED;
+	private int startingNumber;
+	private int numberOfDigits;
 	
-	public FileProcessor(List<String> fileList) {
+	public FileProcessor(List<String> fileList, int startingNumber) {
 		this.fileList = fileList;
+		this.startingNumber = startingNumber;
+		numberOfDigits = findNumberOfDigitsIn(startingNumber);
+		System.out.println("number of digits: " + numberOfDigits);
 		processList();
+	}
+	
+	private int findNumberOfDigitsIn(int source) {
+		int count = 0;
+		do {
+			source /= 10;
+			count++;
+		} while(source > 0);
+		
+		return count;
 	}
 	
 	/**
@@ -20,7 +34,7 @@ public class FileProcessor {
 	 */
 	private void processList() {
 		if(state == State.UNINITIALIZED) {
-			proposedList = new TreeSet<>();
+			proposedList = new ArrayList<>();
 			
 			for(int index = 0; index < fileList.size(); index++) {
 				String fileNameBase = getFileNameBase(index);
@@ -28,11 +42,7 @@ public class FileProcessor {
 				String prefix = convertToTwoDigit(index + 1) + "-";
 				String suffix = fileNameBase.substring(indexOfName);
 				String newName = prefix + suffix;
-				boolean addSuccess = proposedList.add(newName);
-				if(!addSuccess) {
-					newName = newName + "[Conflict]" + index;
-					proposedList.add(newName);
-				}
+				proposedList.add(newName);
 			}
 			
 		}
@@ -153,13 +163,18 @@ public class FileProcessor {
 		//fileList[0] is renamed to proposedList[0]
 		//fileList[1] is renamed to proposedList[1]
 		//etc.
-		
 		if(state == State.READY) {
 			System.out.println("Updating files");
-			
-			
-			
-			
+			for(int index = 0; index < fileList.size(); index++) {
+				File oldFile = new File(fileList.get(index));
+				File newFile = new File(proposedList.get(index));
+				if(newFile.exists()) {
+					//Can't rename the file because the new filename already exists
+					System.out.println("Can't rename the file because the new filename already exists");
+				} else {
+					oldFile.renameTo(newFile);
+				}
+			}
 		} else {
 			throw new IllegalStateException("Cannot update file system when object is not in the ready state. Current object state is " + state.toString());
 		}

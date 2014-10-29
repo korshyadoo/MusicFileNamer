@@ -1,6 +1,7 @@
 package com.korshyadoo.musicFileNamer;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
@@ -13,14 +14,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
 import com.korshyadoo.musicFileNamer.conf.Configuration;
@@ -35,6 +42,8 @@ public class MainFrame extends JFrame {
 	private BufferedImage downArrow;
 	private DefaultListModel<String> listModel = new DefaultListModel<>();
 	private JList<String> lstFileList;
+	private JButton btnSave;
+	private JButton btnRestart;
 
 	public MainFrame() throws IOException {
 		upArrow = ImageIO.read(new File("src\\main\\resources\\upArrow.png"));
@@ -46,6 +55,7 @@ public class MainFrame extends JFrame {
 	private void createAndShowGui() {
 		Configuration config = ProgramLauncher.config;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setResizable(false);
 		setBounds(config.getMainWindowX(), config.getMainWindowY(), config.getMainWindowWidth(), config.getMainWindowHeight());
 		// setBounds(100, 200, 400, 400);
 		contentPane = new JPanel();
@@ -56,7 +66,7 @@ public class MainFrame extends JFrame {
 
 		createBrowsePanel();
 		createListPanel();
-		createButtonPanel();
+		createBottomPanel();
 	}
 
 	private void createBrowsePanel() {
@@ -80,6 +90,8 @@ public class MainFrame extends JFrame {
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					MainFrame.this.selectedDirectory = fc.getSelectedFile();
 					changeSelectedDirectory();
+					MainFrame.this.btnSave.setEnabled(true);
+					MainFrame.this.btnRestart.setEnabled(true);
 				}
 			}
 		});
@@ -94,81 +106,129 @@ public class MainFrame extends JFrame {
 		listPanel.add(lstFileList, BorderLayout.CENTER);
 	}
 
-	private void createButtonPanel() {
-		JPanel buttonPanel = new JPanel();
-		// buttonPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-		buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-		contentPane.add(buttonPanel, BorderLayout.SOUTH);
+	private void createBottomPanel() {
+		JPanel bottomPanel = new JPanel();
+		bottomPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+		contentPane.add(bottomPanel, BorderLayout.SOUTH);
 		
+		Border bottomPanelComponenetBorder = BorderFactory.createEmptyBorder(0, 5, 0, 5);
+		
+		JPanel buttonPanel = createButtonPanel();
+		buttonPanel.setBorder(bottomPanelComponenetBorder);
+		bottomPanel.add(buttonPanel);
+		
+		JPanel inputPanel = createInputPanel();
+		inputPanel.setBorder(bottomPanelComponenetBorder);
+		bottomPanel.add(inputPanel);
+	}
+	
+	private JPanel createInputPanel() {
+		JPanel inputPanel = new JPanel();
+		inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.PAGE_AXIS));
+		
+		JPanel textPanel = createTextPanel();
+		Border border = BorderFactory.createEmptyBorder(5, 0, 10, 0);
+		textPanel.setBorder(border);
+		inputPanel.add(textPanel);
+		
+		JPanel radioPanel = createRadioPanel();
+		inputPanel.add(radioPanel);
+		
+		return inputPanel;
+	}
+
+	private JPanel createTextPanel() {
+		JPanel result = new JPanel();
+		result.setLayout(new BoxLayout(result, BoxLayout.PAGE_AXIS));
+		
+		JLabel label = new JLabel("Enter the starting number:");
+		label.setBorder(BorderFactory.createLineBorder(Color.black));
+		result.add(label);
+		JTextField textField = new JTextField("1");
+		Dimension d = new Dimension((int)(label.getPreferredSize().getWidth()), (int)(textField.getPreferredSize().getHeight()));
+		textField.setMaximumSize(d);
+		result.add(textField);
+		
+		return result;
+	}
+	
+	private JPanel createButtonPanel() {
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+
 		JButton btnUpArrow = createUpArrowButton();
 		buttonPanel.add(btnUpArrow);
 
 		JButton btnDownArrow = createDownArrowButton();
 		buttonPanel.add(btnDownArrow);
 
-		JButton btnSave = new JButton("Save");
-		int btnSavetWidth = (int) (btnSave.getPreferredSize().getWidth());
-		int btnSaveHeight = (int) (btnUpArrow.getPreferredSize().getHeight());
-		Dimension saveDimension = new Dimension(btnSavetWidth, btnSaveHeight);
-		btnSave.setPreferredSize(saveDimension);
-		btnSave.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				List<String> results = new ArrayList<>();
-				for (int index = 0; index < listModel.getSize(); index++) {
-					results.add(listModel.get(index));
-				}
-				FileProcessor fp = new FileProcessor(results);
-				List<String> proposedList = fp.getProposedList();
-
-				// Create a confirm JOptionPane with proposed list
-				Object[] options = { "Continue", "Cancel" };
-				int result = JOptionPane.showOptionDialog(MainFrame.this, 
-														generateMessageText(proposedList), 
-														"Confirm", JOptionPane.YES_NO_OPTION,
-														JOptionPane.QUESTION_MESSAGE, 
-														null, 
-														options, 
-														options[1]);
-
-				if (result == JOptionPane.YES_OPTION) {
-					fp.upateFiles();
-				}
-				loadListPanelContents();		//Refresh the list panel with the new file names
-			}
-		});
-		buttonPanel.add(btnSave);
-		
-		JButton btnRestart = new JButton("Restart");
-		int btnRestarttWidth = (int)(btnRestart.getPreferredSize().getWidth());
-		int btnRestartHeight = (int)(btnUpArrow.getPreferredSize().getHeight());
-		Dimension restartDimension = new Dimension(btnRestarttWidth, btnRestartHeight);
+		btnRestart = new JButton("Restart");
+		int restartWidth = (int) (btnRestart.getPreferredSize().getWidth());
+		int restartHeight = (int) (btnUpArrow.getPreferredSize().getHeight());
+		Dimension restartDimension = new Dimension(restartWidth, restartHeight);
 		btnRestart.setPreferredSize(restartDimension);
 		btnRestart.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int result = JOptionPane.showConfirmDialog(MainFrame.this, "Are you sure you want to restart?", "Restart?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-				if(result == JOptionPane.YES_OPTION) {
-					//Yes was selected from the confirm dialog. Reset the JList contents
+				int result = JOptionPane.showConfirmDialog(MainFrame.this, "Are you sure you want to restart?", "Restart?", JOptionPane.YES_NO_OPTION,
+						JOptionPane.QUESTION_MESSAGE);
+				if (result == JOptionPane.YES_OPTION) {
+					// Yes was selected from the confirm dialog. Reset the JList contents
 					loadListPanelContents();
 				}
 			}
 		});
+		btnRestart.setEnabled(false);
+		
+		btnSave = new JButton("Save");
+		int saveWidth = (int) (btnRestart.getPreferredSize().getWidth());
+		int saveHeight = (int) (btnUpArrow.getPreferredSize().getHeight());
+		Dimension saveDimension = new Dimension(saveWidth, saveHeight);
+		btnSave.setPreferredSize(saveDimension);
+		btnSave.addActionListener(new SaveButtonActionListener());
+		btnSave.setEnabled(false);
+		buttonPanel.add(btnSave);
+
 		buttonPanel.add(btnRestart);
+		
+		return buttonPanel;
 	}
 	
+	private JPanel createRadioPanel() {
+		JLabel patternLabel = new JLabel("Choose a file prefix pattern:");
+		JRadioButton pattern1 = new JRadioButton("## fileName.ext (number, space, file name)");
+		pattern1.setSelected(true);
+		JRadioButton pattern2 = new JRadioButton("##-fileName.ext (number, hyphen, file name)");
+		JRadioButton pattern3 = new JRadioButton("## - fileName.ext (number, space, hyphen, space, file name)");
+		
+		//Add the buttons to a group
+		ButtonGroup group = new ButtonGroup();
+		group.add(pattern1);
+		group.add(pattern2);
+		group.add(pattern3);
+		
+		//Create the panel and add the components to it
+		JPanel patternChooserPanel = new JPanel();
+		patternChooserPanel.setLayout(new BoxLayout(patternChooserPanel, BoxLayout.PAGE_AXIS));
+		patternChooserPanel.add(patternLabel);
+		patternChooserPanel.add(pattern1);
+		patternChooserPanel.add(pattern2);
+		patternChooserPanel.add(pattern3);
+		
+		return patternChooserPanel;
+	}
+
 	private String generateMessageText(List<String> list) {
 		String li = "<li>";
 		String endLi = "</li>";
 		StringBuilder result = new StringBuilder("<html>The new file names will be:<br><ol style=\"list-style-type: disc\">");
-		for(int index = 0; index < list.size(); index++) {
+		for (int index = 0; index < list.size(); index++) {
 			result = result.append(li + list.get(index) + endLi);
 		}
 		result = result.append("</html>");
 		return result.toString();
 	}
-	
-	
+
 	private JButton createUpArrowButton() {
 		JButton btnUpArrow = new JButton() {
 			@Override
@@ -183,12 +243,12 @@ public class MainFrame extends JFrame {
 			}
 
 		};
-		
+
 		btnUpArrow.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int currentIndex = lstFileList.getSelectedIndex();
-				if(currentIndex > 0) {
+				if (currentIndex > 0) {
 					String valueAtCurrentIndex = lstFileList.getSelectedValue();
 					lstFileList.setSelectedIndex(currentIndex - 1);
 					String valueAtNewIndex = lstFileList.getSelectedValue();
@@ -197,10 +257,10 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		
+
 		return btnUpArrow;
 	}
-	
+
 	private JButton createDownArrowButton() {
 		JButton btnDownArrow = new JButton() {
 			@Override
@@ -214,12 +274,12 @@ public class MainFrame extends JFrame {
 				return new Dimension(MainFrame.this.downArrow.getWidth(), MainFrame.this.downArrow.getHeight());
 			}
 		};
-		
+
 		btnDownArrow.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int currentIndex = lstFileList.getSelectedIndex();
-				if(currentIndex < (listModel.getSize() - 1)) {
+				if (currentIndex < (listModel.getSize() - 1)) {
 					final String valueAtCurrentIndex = lstFileList.getSelectedValue();
 					lstFileList.setSelectedIndex(currentIndex + 1);
 					final String valueAtNewIndex = lstFileList.getSelectedValue();
@@ -228,7 +288,7 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		
+
 		return btnDownArrow;
 	}
 
@@ -244,8 +304,8 @@ public class MainFrame extends JFrame {
 		// Load the list of files from selectedDirectory into the listPanel
 		listModel = new DefaultListModel<>();
 		File[] listOfFiles = selectedDirectory.listFiles();
-		for(File file : listOfFiles) {
-			if(!file.isDirectory() && !file.isHidden()) {
+		for (File file : listOfFiles) {
+			if (!file.isDirectory() && !file.isHidden()) {
 				listModel.addElement(file.getName());
 			}
 		}
@@ -255,6 +315,72 @@ public class MainFrame extends JFrame {
 	private void changeSelectedDirectory() {
 		updateBrowseSelection();
 		loadListPanelContents();
+	}
+
+	private class SaveButtonActionListener implements ActionListener {
+		private String startingNumberInput;
+		private int startingNumber;
+
+		private boolean validNumberInput() {
+			try {
+				startingNumber = Integer.parseInt(startingNumberInput);
+				if (startingNumber < 0 || startingNumber > 9999) {
+					return false;
+				} else {
+					return true;
+				}
+			} catch (NumberFormatException ex) {
+				return false;
+			}
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// Prompt the user to input the starting number
+			startingNumberInput = null;
+			boolean error = true;
+			boolean first = true;
+			while (error) {
+				if (first) {
+					startingNumberInput = JOptionPane.showInputDialog(MainFrame.this, "Enter the starting number");
+				} else {
+					startingNumberInput = JOptionPane.showInputDialog(MainFrame.this, "error");
+				}
+				if (startingNumberInput == null) {
+					// User cancel
+					break;
+				} else {
+					// Check validity
+					if (validNumberInput()) {
+						// Process number
+						error = false;
+						System.out.println("Processing Number: " + startingNumber);
+						processNumber();
+					}
+				}
+				first = false;
+			}
+		}
+		
+		private void processNumber() {
+			List<String> results = new ArrayList<>();
+			for (int index = 0; index < listModel.getSize(); index++) {
+				results.add(listModel.get(index));
+			}
+			FileProcessor fp = new FileProcessor(results, startingNumber);
+			List<String> proposedList = fp.getProposedList();
+
+			// Create a confirm JOptionPane with proposed list
+			Object[] options = { "Continue", "Cancel" };
+			int result = JOptionPane.showOptionDialog(MainFrame.this, generateMessageText(proposedList), "Confirm", JOptionPane.YES_NO_OPTION,
+					JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+
+			if (result == JOptionPane.YES_OPTION) {
+				fp.upateFiles();
+				loadListPanelContents(); // Refresh the list panel with the new file names
+			}
+		}
+
 	}
 
 }
