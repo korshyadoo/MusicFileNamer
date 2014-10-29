@@ -10,10 +10,12 @@ public class FileProcessor {
 	private State state = State.UNINITIALIZED;
 	private int startingNumber;
 	private int numberOfDigits;
+	private PrefixFormats pattern;
 	
-	public FileProcessor(List<String> fileList, int startingNumber) {
+	public FileProcessor(List<String> fileList, int startingNumber, PrefixFormats pattern) {
 		this.fileList = fileList;
 		this.startingNumber = startingNumber;
+		this.pattern = pattern;
 		numberOfDigits = findNumberOfDigitsIn(startingNumber);
 		System.out.println("number of digits: " + numberOfDigits);
 		processList();
@@ -36,13 +38,15 @@ public class FileProcessor {
 		if(state == State.UNINITIALIZED) {
 			proposedList = new ArrayList<>();
 			
+			int count = startingNumber;
 			for(int index = 0; index < fileList.size(); index++) {
 				String fileNameBase = getFileNameBase(index);
 				int indexOfName = findIndexOfName(fileNameBase);
-				String prefix = convertToTwoDigit(index + 1) + "-";
+				String prefix = convertToTwoDigit(count) + pattern.toString();
 				String suffix = fileNameBase.substring(indexOfName);
 				String newName = prefix + suffix;
 				proposedList.add(newName);
+				count++;
 			}
 			
 		}
@@ -52,7 +56,7 @@ public class FileProcessor {
 			state = State.ERROR1;
 		}
 	}
-	
+
 	private int indexOfFirstAlphaIn(String str) {
 		String[] strSplit = str.split("\\p{Alpha}", 2);
 		int indexOfFirstAlpha = strSplit[0].length();
@@ -80,6 +84,12 @@ public class FileProcessor {
 		return indexOfNextAlphaNumeric;
 	}
 	
+	/**
+	 * Finds the index within the fileName String where the name of the file begins. 
+	 * For example: if the filename is "01 Born To Be Wild", the index of the name is 3
+	 * @param fileName The passed fileName
+	 * @return The index of the beginning of the name
+	 */
 	private int findIndexOfName(String fileName) {
 		//Find the index of the first '-'
 		int indexOfFirstHyphen = fileName.indexOf('-');
@@ -121,12 +131,15 @@ public class FileProcessor {
 		return nameIndex;
 	}
 	
+	/**
+	 * Converts the passed int into a String. If the number is between 0 and 9, inclusive, a "0" is concatenated to the beginning.
+	 * @param num The int to convert
+	 * @return The passed int with a prefixed "0", if the passed int is a one-digit integer. Otherwise, the int is converted to a String and returned unaltered.
+	 */
 	private String convertToTwoDigit(int num) {
-		String result = "0";
+		String result = Integer.toString(num);
 		if(num < 10 && num >= 0) {
-			result = result + num; 
-		} else {
-			result = Integer.toString(num);
+			result = "0" + result; 
 		}
 		return result;
 	}

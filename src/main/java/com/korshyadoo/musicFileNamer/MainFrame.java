@@ -1,7 +1,6 @@
 package com.korshyadoo.musicFileNamer;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
@@ -45,6 +44,9 @@ public class MainFrame extends JFrame {
 	private JButton btnSave;
 	private JButton btnRestart;
 	private JTextField txtNumberInput;
+	private JRadioButton pattern1;
+	private JRadioButton pattern2;
+	private JRadioButton pattern3;
 
 	public MainFrame() throws IOException {
 		upArrow = ImageIO.read(new File("src\\main\\resources\\upArrow.png"));
@@ -143,7 +145,6 @@ public class MainFrame extends JFrame {
 		result.setLayout(new BoxLayout(result, BoxLayout.PAGE_AXIS));
 
 		JLabel label = new JLabel("Enter the starting number:");
-		label.setBorder(BorderFactory.createLineBorder(Color.black));
 		result.add(label);
 
 		txtNumberInput = new JTextField("1");
@@ -198,10 +199,10 @@ public class MainFrame extends JFrame {
 
 	private JPanel createRadioPanel() {
 		JLabel patternLabel = new JLabel("Choose a file prefix pattern:");
-		JRadioButton pattern1 = new JRadioButton("## fileName.ext (number, space, file name)");
+		pattern1 = new JRadioButton(PrefixFormats.PATTERN1.getMessage());
 		pattern1.setSelected(true);
-		JRadioButton pattern2 = new JRadioButton("##-fileName.ext (number, hyphen, file name)");
-		JRadioButton pattern3 = new JRadioButton("## - fileName.ext (number, space, hyphen, space, file name)");
+		pattern2 = new JRadioButton(PrefixFormats.PATTERN2.getMessage());
+		pattern3 = new JRadioButton(PrefixFormats.PATTERN3.getMessage());
 
 		// Add the buttons to a group
 		ButtonGroup group = new ButtonGroup();
@@ -342,7 +343,7 @@ public class MainFrame extends JFrame {
 		private boolean isValidNumberInput() {
 			try {
 				int startingNumber = Integer.parseInt(startingNumberInput);
-				if (startingNumber < 0 || startingNumber > 9999) {
+				if (startingNumber < 0 || startingNumber > 999) {
 					return false;
 				} else {
 					return true;
@@ -360,7 +361,7 @@ public class MainFrame extends JFrame {
 			}
 
 			// Retrieve the list of proposed file names
-			fileProcessor = new FileProcessor(frontEndList, Integer.parseInt(startingNumberInput));
+			fileProcessor = new FileProcessor(frontEndList, Integer.parseInt(startingNumberInput), MainFrame.this.getSelectedPattern());
 			List<String> proposedList = fileProcessor.getProposedList();
 
 			// Create a confirm JOptionPane with proposed list
@@ -375,6 +376,18 @@ public class MainFrame extends JFrame {
 			}
 		}
 
+	}
+	
+	private PrefixFormats getSelectedPattern() {
+		if(pattern1.isSelected()) {
+			return PrefixFormats.PATTERN1;
+		} else if(pattern2.isSelected()) {
+			return PrefixFormats.PATTERN2;
+		} else if(pattern3.isSelected()) {
+			return PrefixFormats.PATTERN3;
+		} else {
+			return null;
+		}
 	}
 
 }
