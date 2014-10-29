@@ -25,6 +25,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
@@ -106,7 +107,8 @@ public class MainFrame extends JFrame {
 		listPanel.setLayout(new BorderLayout(0, 0));
 		contentPane.add(listPanel, BorderLayout.CENTER);
 		lstFileList = new JList<>(listModel);
-		listPanel.add(lstFileList, BorderLayout.CENTER);
+		JScrollPane scrollPane = new JScrollPane(lstFileList);
+		listPanel.add(scrollPane);
 	}
 
 	private void createBottomPanel() {

@@ -12,7 +12,7 @@ public class DevConfiguration implements Configuration {
 	}
 	
 	public int getMainWindowWidth() {
-		return 900;
+		return 740;
 	}
 
 	public int getMainWindowHeight() {
