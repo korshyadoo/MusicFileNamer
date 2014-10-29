@@ -40,11 +40,13 @@ public class FileProcessor {
 			
 			int count = startingNumber;
 			for(int index = 0; index < fileList.size(); index++) {
-				String fileNameBase = getFileNameBase(index);
+				List<String> splitName = splitNameAndExtension(index);
+				String fileNameBase = splitName.get(0);
+				String extension = splitName.get(1);
 				int indexOfName = findIndexOfName(fileNameBase);
 				String prefix = convertToTwoDigit(count) + pattern.toString();
 				String suffix = fileNameBase.substring(indexOfName);
-				String newName = prefix + suffix;
+				String newName = prefix + suffix + extension;
 				proposedList.add(newName);
 				count++;
 			}
@@ -150,13 +152,17 @@ public class FileProcessor {
 	 * @param index The index in the fileList to retrieve the file name from
 	 * @return The name of the file at the passed index, without the extension
 	 */
-	private String getFileNameBase(int index) {
+	private List<String> splitNameAndExtension(int index) {
 		String fileName = fileList.get(index);
 		int extensionIndex = fileName.lastIndexOf('.');
+		String extension = fileName.substring(extensionIndex);
 		if(extensionIndex != -1) {
 			fileName = fileName.substring(0, extensionIndex);
 		}
-		return fileName;
+		List<String> results = new ArrayList<>();
+		results.add(fileName);
+		results.add(extension);
+		return results;
 	}
 	
 	public List<String> getProposedList() throws IllegalStateException {
@@ -179,13 +185,17 @@ public class FileProcessor {
 		if(state == State.READY) {
 			System.out.println("Updating files");
 			for(int index = 0; index < fileList.size(); index++) {
-				File oldFile = new File(fileList.get(index));
-				File newFile = new File(proposedList.get(index));
+				File oldFile = new File(MainFrame.getSelectedDirectory().toString() + "\\" + fileList.get(index));
+				File newFile = new File(MainFrame.getSelectedDirectory().toString() + "\\" + proposedList.get(index));
 				if(newFile.exists()) {
 					//Can't rename the file because the new filename already exists
 					System.out.println("Can't rename the file because the new filename already exists");
 				} else {
-					oldFile.renameTo(newFile);
+					boolean result = oldFile.renameTo(newFile);
+					if(!result) {
+						boolean canWrite = oldFile.canWrite();
+						System.out.println(canWrite);
+					}
 				}
 			}
 		} else {

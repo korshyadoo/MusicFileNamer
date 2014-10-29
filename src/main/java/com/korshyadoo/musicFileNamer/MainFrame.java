@@ -35,7 +35,7 @@ import com.korshyadoo.musicFileNamer.conf.Configuration;
 public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 4884885745124721080L;
 	private JPanel contentPane;
-	private File selectedDirectory = null;
+	private static File selectedDirectory = null;
 	private JTextField txtDirectory;
 	private BufferedImage upArrow;
 	private BufferedImage downArrow;
@@ -91,8 +91,8 @@ public class MainFrame extends JFrame {
 				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				int returnVal = fc.showDialog(MainFrame.this, "Select");
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					MainFrame.this.selectedDirectory = fc.getSelectedFile();
-					changeSelectedDirectory();
+					MainFrame.setSelectedDirectory(fc.getSelectedFile());
+					updateSelectedDirectory();
 					MainFrame.this.btnSave.setEnabled(true);
 					MainFrame.this.btnRestart.setEnabled(true);
 				}
@@ -296,8 +296,8 @@ public class MainFrame extends JFrame {
 	}
 
 	private void updateBrowseSelection() {
-		if (selectedDirectory != null) {
-			txtDirectory.setText(selectedDirectory.toString());
+		if (getSelectedDirectory() != null) {
+			txtDirectory.setText(getSelectedDirectory().toString());
 		} else {
 			txtDirectory.setText("");
 		}
@@ -306,7 +306,7 @@ public class MainFrame extends JFrame {
 	private void loadListPanelContents() {
 		// Load the list of files from selectedDirectory into the listPanel
 		listModel = new DefaultListModel<>();
-		File[] listOfFiles = selectedDirectory.listFiles();
+		File[] listOfFiles = getSelectedDirectory().listFiles();
 		for (File file : listOfFiles) {
 			if (!file.isDirectory() && !file.isHidden()) {
 				listModel.addElement(file.getName());
@@ -315,7 +315,7 @@ public class MainFrame extends JFrame {
 		lstFileList.setModel(listModel);
 	}
 
-	private void changeSelectedDirectory() {
+	private void updateSelectedDirectory() {
 		updateBrowseSelection();
 		loadListPanelContents();
 	}
@@ -388,6 +388,14 @@ public class MainFrame extends JFrame {
 		} else {
 			return null;
 		}
+	}
+
+	public static File getSelectedDirectory() {
+		return selectedDirectory;
+	}
+
+	public static void setSelectedDirectory(File selectedDirectory) {
+		MainFrame.selectedDirectory = selectedDirectory;
 	}
 
 }
