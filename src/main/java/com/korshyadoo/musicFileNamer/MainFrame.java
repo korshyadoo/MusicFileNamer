@@ -44,6 +44,7 @@ public class MainFrame extends JFrame {
 	private JList<String> lstFileList;
 	private JButton btnSave;
 	private JButton btnRestart;
+	private JTextField txtNumberInput;
 
 	public MainFrame() throws IOException {
 		upArrow = ImageIO.read(new File("src\\main\\resources\\upArrow.png"));
@@ -110,48 +111,49 @@ public class MainFrame extends JFrame {
 		JPanel bottomPanel = new JPanel();
 		bottomPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
 		contentPane.add(bottomPanel, BorderLayout.SOUTH);
-		
+
 		Border bottomPanelComponenetBorder = BorderFactory.createEmptyBorder(0, 5, 0, 5);
-		
+
 		JPanel buttonPanel = createButtonPanel();
 		buttonPanel.setBorder(bottomPanelComponenetBorder);
 		bottomPanel.add(buttonPanel);
-		
+
 		JPanel inputPanel = createInputPanel();
 		inputPanel.setBorder(bottomPanelComponenetBorder);
 		bottomPanel.add(inputPanel);
 	}
-	
+
 	private JPanel createInputPanel() {
 		JPanel inputPanel = new JPanel();
 		inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.PAGE_AXIS));
-		
+
 		JPanel textPanel = createTextPanel();
 		Border border = BorderFactory.createEmptyBorder(5, 0, 10, 0);
 		textPanel.setBorder(border);
 		inputPanel.add(textPanel);
-		
+
 		JPanel radioPanel = createRadioPanel();
 		inputPanel.add(radioPanel);
-		
+
 		return inputPanel;
 	}
 
 	private JPanel createTextPanel() {
 		JPanel result = new JPanel();
 		result.setLayout(new BoxLayout(result, BoxLayout.PAGE_AXIS));
-		
+
 		JLabel label = new JLabel("Enter the starting number:");
 		label.setBorder(BorderFactory.createLineBorder(Color.black));
 		result.add(label);
-		JTextField textField = new JTextField("1");
-		Dimension d = new Dimension((int)(label.getPreferredSize().getWidth()), (int)(textField.getPreferredSize().getHeight()));
-		textField.setMaximumSize(d);
-		result.add(textField);
-		
+
+		txtNumberInput = new JTextField("1");
+		Dimension d = new Dimension((int) (label.getPreferredSize().getWidth()), (int) (txtNumberInput.getPreferredSize().getHeight()));
+		txtNumberInput.setMaximumSize(d);
+		result.add(txtNumberInput);
+
 		return result;
 	}
-	
+
 	private JPanel createButtonPanel() {
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -179,7 +181,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		btnRestart.setEnabled(false);
-		
+
 		btnSave = new JButton("Save");
 		int saveWidth = (int) (btnRestart.getPreferredSize().getWidth());
 		int saveHeight = (int) (btnUpArrow.getPreferredSize().getHeight());
@@ -190,31 +192,31 @@ public class MainFrame extends JFrame {
 		buttonPanel.add(btnSave);
 
 		buttonPanel.add(btnRestart);
-		
+
 		return buttonPanel;
 	}
-	
+
 	private JPanel createRadioPanel() {
 		JLabel patternLabel = new JLabel("Choose a file prefix pattern:");
 		JRadioButton pattern1 = new JRadioButton("## fileName.ext (number, space, file name)");
 		pattern1.setSelected(true);
 		JRadioButton pattern2 = new JRadioButton("##-fileName.ext (number, hyphen, file name)");
 		JRadioButton pattern3 = new JRadioButton("## - fileName.ext (number, space, hyphen, space, file name)");
-		
-		//Add the buttons to a group
+
+		// Add the buttons to a group
 		ButtonGroup group = new ButtonGroup();
 		group.add(pattern1);
 		group.add(pattern2);
 		group.add(pattern3);
-		
-		//Create the panel and add the components to it
+
+		// Create the panel and add the components to it
 		JPanel patternChooserPanel = new JPanel();
 		patternChooserPanel.setLayout(new BoxLayout(patternChooserPanel, BoxLayout.PAGE_AXIS));
 		patternChooserPanel.add(patternLabel);
 		patternChooserPanel.add(pattern1);
 		patternChooserPanel.add(pattern2);
 		patternChooserPanel.add(pattern3);
-		
+
 		return patternChooserPanel;
 	}
 
@@ -319,11 +321,27 @@ public class MainFrame extends JFrame {
 
 	private class SaveButtonActionListener implements ActionListener {
 		private String startingNumberInput;
-		private int startingNumber;
+		private FileProcessor fileProcessor;
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// Validate the input
+			startingNumberInput = MainFrame.this.txtNumberInput.getText();
+			if (isValidNumberInput()) {
+				System.out.println("Processing Number: " + startingNumberInput);
+				
+				// Display confirmation window
+				if (isConfirmed()) {
+					//Process the file name changes and refresh the front-end list
+					fileProcessor.upateFiles();
+					loadListPanelContents(); 
+				}
+			}
+		}
 
-		private boolean validNumberInput() {
+		private boolean isValidNumberInput() {
 			try {
-				startingNumber = Integer.parseInt(startingNumberInput);
+				int startingNumber = Integer.parseInt(startingNumberInput);
 				if (startingNumber < 0 || startingNumber > 9999) {
 					return false;
 				} else {
@@ -334,41 +352,16 @@ public class MainFrame extends JFrame {
 			}
 		}
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			// Prompt the user to input the starting number
-			startingNumberInput = null;
-			boolean error = true;
-			boolean first = true;
-			while (error) {
-				if (first) {
-					startingNumberInput = JOptionPane.showInputDialog(MainFrame.this, "Enter the starting number");
-				} else {
-					startingNumberInput = JOptionPane.showInputDialog(MainFrame.this, "error");
-				}
-				if (startingNumberInput == null) {
-					// User cancel
-					break;
-				} else {
-					// Check validity
-					if (validNumberInput()) {
-						// Process number
-						error = false;
-						System.out.println("Processing Number: " + startingNumber);
-						processNumber();
-					}
-				}
-				first = false;
-			}
-		}
-		
-		private void processNumber() {
-			List<String> results = new ArrayList<>();
+		private boolean isConfirmed() {
+			// Get the list of files from the front-end
+			List<String> frontEndList = new ArrayList<>();
 			for (int index = 0; index < listModel.getSize(); index++) {
-				results.add(listModel.get(index));
+				frontEndList.add(listModel.get(index));
 			}
-			FileProcessor fp = new FileProcessor(results, startingNumber);
-			List<String> proposedList = fp.getProposedList();
+
+			// Retrieve the list of proposed file names
+			fileProcessor = new FileProcessor(frontEndList, Integer.parseInt(startingNumberInput));
+			List<String> proposedList = fileProcessor.getProposedList();
 
 			// Create a confirm JOptionPane with proposed list
 			Object[] options = { "Continue", "Cancel" };
@@ -376,8 +369,9 @@ public class MainFrame extends JFrame {
 					JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 
 			if (result == JOptionPane.YES_OPTION) {
-				fp.upateFiles();
-				loadListPanelContents(); // Refresh the list panel with the new file names
+				return true;
+			} else {
+				return false;
 			}
 		}
 
