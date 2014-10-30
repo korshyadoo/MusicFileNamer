@@ -1,6 +1,7 @@
 package com.korshyadoo.musicFileNamer;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
@@ -28,8 +29,11 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 
 import com.korshyadoo.musicFileNamer.conf.Configuration;
 
@@ -49,6 +53,10 @@ public class MainFrame extends JFrame {
 	private JRadioButton pattern1;
 	private JRadioButton pattern2;
 	private JRadioButton pattern3;
+	private JScrollPane scrollPane;
+	private JLabel lblClickBrowse;
+	private JPanel listPanel;
+	private boolean listVisible;
 
 	public MainFrame() throws IOException {
 		upArrow = ImageIO.read(getInputStream("upArrow.png"));
@@ -100,6 +108,7 @@ public class MainFrame extends JFrame {
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					MainFrame.setSelectedDirectory(fc.getSelectedFile());
 					updateSelectedDirectory();
+					loadListPanelContents();
 					MainFrame.this.btnSave.setEnabled(true);
 					MainFrame.this.btnRestart.setEnabled(true);
 				}
@@ -109,12 +118,43 @@ public class MainFrame extends JFrame {
 	}
 
 	private void createListPanel() {
-		JPanel listPanel = new JPanel();
+		listPanel = new JPanel();
 		listPanel.setLayout(new BorderLayout(0, 0));
 		contentPane.add(listPanel, BorderLayout.CENTER);
 		lstFileList = new JList<>(listModel);
-		JScrollPane scrollPane = new JScrollPane(lstFileList);
-		listPanel.add(scrollPane);
+		listModel.addListDataListener(new ListDataListener() {
+			
+			@Override
+			public void intervalRemoved(ListDataEvent e) {
+				if(listModel.size() == 0) {
+					System.out.println("removing scrollpane");
+					listPanel.remove(scrollPane);
+					listVisible = false;
+					listPanel.add(lblClickBrowse, BorderLayout.CENTER);
+					listPanel.validate();
+				}
+			}
+			
+			@Override
+			public void intervalAdded(ListDataEvent e) {
+				if (!listVisible) {
+					listPanel.remove(lblClickBrowse);
+					System.out.println("adding scrollpane");
+					listPanel.add(scrollPane, BorderLayout.CENTER);
+					listVisible = true;
+					listPanel.validate();
+				}
+			}
+			
+			@Override
+			public void contentsChanged(ListDataEvent e) {
+			}
+		});
+		scrollPane = new JScrollPane(lstFileList);
+		lblClickBrowse = new JLabel("Click \"Browse\" to choose a folder to view", SwingConstants.CENTER);
+		lblClickBrowse.setForeground(Color.RED);
+		
+		listPanel.add(lblClickBrowse, BorderLayout.CENTER);
 	}
 
 	private void createBottomPanel() {
@@ -313,7 +353,7 @@ public class MainFrame extends JFrame {
 
 	private void loadListPanelContents() {
 		// Load the list of files from selectedDirectory into the listPanel
-		listModel = new DefaultListModel<>();
+		listModel.clear();
 		File[] listOfFiles = getSelectedDirectory().listFiles();
 		for (File file : listOfFiles) {
 			if (!file.isDirectory() && !file.isHidden()) {
@@ -325,7 +365,7 @@ public class MainFrame extends JFrame {
 
 	private void updateSelectedDirectory() {
 		updateBrowseSelection();
-		loadListPanelContents();
+		
 	}
 
 	private class SaveButtonActionListener implements ActionListener {
