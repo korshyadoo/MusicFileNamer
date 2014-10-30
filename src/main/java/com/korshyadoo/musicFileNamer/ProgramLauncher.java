@@ -2,6 +2,10 @@ package com.korshyadoo.musicFileNamer;
 
 import java.awt.EventQueue;
 
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -33,6 +37,33 @@ public class ProgramLauncher {
 				}
 			}
 		});
+		
+	}
+	
+	public static void setLookAndFeel(String lookAndFeel) {
+		try {
+			boolean success = false;
+		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		        if (lookAndFeel.equals(info.getName())) {
+		            UIManager.setLookAndFeel(info.getClassName());
+		            success = true;
+		            break;
+		        }
+		    }
+		    if(!success) {
+		    	System.out.println("not found");
+		    }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void setLookAndFeel(LookAndFeel laf) {
+		try {
+			UIManager.setLookAndFeel(laf);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 	}
 }

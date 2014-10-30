@@ -29,7 +29,9 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.LookAndFeel;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListDataEvent;
@@ -40,6 +42,8 @@ import com.korshyadoo.musicFileNamer.conf.Configuration;
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 4884885745124721080L;
+
+	private Mode mode;
 	private JPanel contentPane;
 	private static File selectedDirectory = null;
 	private JTextField txtDirectory;
@@ -64,7 +68,7 @@ public class MainFrame extends JFrame {
 
 		createAndShowGui();
 	}
-	
+
 	private InputStream getInputStream(String path) {
 		InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(path);
 		return resourceAsStream;
@@ -101,20 +105,41 @@ public class MainFrame extends JFrame {
 		btnBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Open a file browser to choose a location
+				LookAndFeel previousLF = UIManager.getLookAndFeel();
+				ProgramLauncher.setLookAndFeel("Nimbus");
 				JFileChooser fc = new JFileChooser();
 				fc.setCurrentDirectory(ProgramLauncher.config.getDefaultDirectory());
-				fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				int returnVal = fc.showDialog(MainFrame.this, "Select");
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					MainFrame.setSelectedDirectory(fc.getSelectedFile());
-					updateSelectedDirectory();
+					boolean noFiles = hasOnlyDirectories(selectedDirectory);
+					if(noFiles) {
+						mode = Mode.RENAME_DIRECTORIES;
+					} else {
+						mode = Mode.RENAME_FILES;
+					}
+					updateDirectoryTextField();
 					loadListPanelContents();
 					MainFrame.this.btnSave.setEnabled(true);
 					MainFrame.this.btnRestart.setEnabled(true);
 				}
+				ProgramLauncher.setLookAndFeel(previousLF);
 			}
 		});
 		browsePanel.add(btnBrowse, BorderLayout.EAST);
+	}
+
+	private boolean hasOnlyDirectories(File file) {
+		boolean result = true;
+		File[] listFiles = file.listFiles();
+		for(File f : listFiles) {
+			if(!f.isDirectory()) {
+				result = false;
+				break;
+			}
+		}
+		return result;
 	}
 
 	private void createListPanel() {
@@ -123,10 +148,10 @@ public class MainFrame extends JFrame {
 		contentPane.add(listPanel, BorderLayout.CENTER);
 		lstFileList = new JList<>(listModel);
 		listModel.addListDataListener(new ListDataListener() {
-			
+
 			@Override
 			public void intervalRemoved(ListDataEvent e) {
-				if(listModel.size() == 0) {
+				if (listModel.size() == 0) {
 					System.out.println("removing scrollpane");
 					listPanel.remove(scrollPane);
 					listVisible = false;
@@ -134,7 +159,7 @@ public class MainFrame extends JFrame {
 					listPanel.validate();
 				}
 			}
-			
+
 			@Override
 			public void intervalAdded(ListDataEvent e) {
 				if (!listVisible) {
@@ -145,7 +170,7 @@ public class MainFrame extends JFrame {
 					listPanel.validate();
 				}
 			}
-			
+
 			@Override
 			public void contentsChanged(ListDataEvent e) {
 			}
@@ -153,7 +178,7 @@ public class MainFrame extends JFrame {
 		scrollPane = new JScrollPane(lstFileList);
 		lblClickBrowse = new JLabel("Click \"Browse\" to choose a folder to view", SwingConstants.CENTER);
 		lblClickBrowse.setForeground(Color.RED);
-		
+
 		listPanel.add(lblClickBrowse, BorderLayout.CENTER);
 	}
 
@@ -343,9 +368,9 @@ public class MainFrame extends JFrame {
 		return btnDownArrow;
 	}
 
-	private void updateBrowseSelection() {
-		if (getSelectedDirectory() != null) {
-			txtDirectory.setText(getSelectedDirectory().toString());
+	private void updateDirectoryTextField() {
+		if (selectedDirectory != null) {
+			txtDirectory.setText(selectedDirectory.toString());
 		} else {
 			txtDirectory.setText("");
 		}
@@ -354,36 +379,42 @@ public class MainFrame extends JFrame {
 	private void loadListPanelContents() {
 		// Load the list of files from selectedDirectory into the listPanel
 		listModel.clear();
-		File[] listOfFiles = getSelectedDirectory().listFiles();
-		for (File file : listOfFiles) {
-			if (!file.isDirectory() && !file.isHidden()) {
-				listModel.addElement(file.getName());
+		File[] listOfFiles = selectedDirectory.listFiles();
+		switch (mode) {
+		case RENAME_FILES:
+			for (File file : listOfFiles) {
+				if (!file.isDirectory() && !file.isHidden()) {
+					listModel.addElement(file.getName());
+				}
 			}
+			break;
+		case RENAME_DIRECTORIES:
+			for (File file : listOfFiles) {
+				if (file.isDirectory() && !file.isHidden()) {
+					listModel.addElement(file.getName());
+				}
+			}
+			break;
 		}
 		lstFileList.setModel(listModel);
-	}
-
-	private void updateSelectedDirectory() {
-		updateBrowseSelection();
-		
 	}
 
 	private class SaveButtonActionListener implements ActionListener {
 		private String startingNumberInput;
 		private FileProcessor fileProcessor;
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			// Validate the input
 			startingNumberInput = MainFrame.this.txtNumberInput.getText();
 			if (isValidNumberInput()) {
 				System.out.println("Processing Number: " + startingNumberInput);
-				
+
 				// Display confirmation window
 				if (isConfirmed()) {
-					//Process the file name changes and refresh the front-end list
+					// Process the file name changes and refresh the front-end list
 					fileProcessor.upateFiles();
-					loadListPanelContents(); 
+					loadListPanelContents();
 				}
 			}
 		}
@@ -409,7 +440,7 @@ public class MainFrame extends JFrame {
 			}
 
 			// Retrieve the list of proposed file names
-			fileProcessor = new FileProcessor(frontEndList, Integer.parseInt(startingNumberInput), MainFrame.this.getSelectedPattern());
+			fileProcessor = new FileProcessor(frontEndList, Integer.parseInt(startingNumberInput), MainFrame.this.getSelectedPattern(), mode);
 			List<String> proposedList = fileProcessor.getProposedList();
 
 			// Create a confirm JOptionPane with proposed list
@@ -425,13 +456,13 @@ public class MainFrame extends JFrame {
 		}
 
 	}
-	
+
 	private PrefixFormats getSelectedPattern() {
-		if(pattern1.isSelected()) {
+		if (pattern1.isSelected()) {
 			return PrefixFormats.PATTERN1;
-		} else if(pattern2.isSelected()) {
+		} else if (pattern2.isSelected()) {
 			return PrefixFormats.PATTERN2;
-		} else if(pattern3.isSelected()) {
+		} else if (pattern3.isSelected()) {
 			return PrefixFormats.PATTERN3;
 		} else {
 			return null;

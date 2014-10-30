@@ -10,11 +10,13 @@ public class FileProcessor {
 	private int startingNumber;
 	private int numberOfDigits;
 	private PrefixFormats pattern;
+	private Mode mode;
 
-	public FileProcessor(List<String> fileList, int startingNumber, PrefixFormats pattern) {
+	public FileProcessor(List<String> fileList, int startingNumber, PrefixFormats pattern, Mode mode) {
 		this.fileList = fileList;
 		this.startingNumber = startingNumber;
 		this.pattern = pattern;
+		this.mode = mode;
 		numberOfDigits = findNumberOfDigitsIn(startingNumber);
 		System.out.println("number of digits: " + numberOfDigits);
 		processList();
@@ -38,9 +40,16 @@ public class FileProcessor {
 
 		int count = startingNumber;
 		for (int index = 0; index < fileList.size(); index++) {
-			List<String> splitName = splitNameAndExtension(index);
-			String fileNameBase = splitName.get(0);
-			String extension = splitName.get(1);
+			String fileNameBase;
+			String extension;
+			if(mode == Mode.RENAME_FILES) {
+				List<String> splitName = splitNameAndExtension(index);
+				fileNameBase = splitName.get(0);
+				extension = splitName.get(1);
+			} else {
+				fileNameBase = fileList.get(index);
+				extension = "";
+			}
 			int indexOfName = findIndexOfName(fileNameBase);
 			String prefix = convertToTwoDigit(count) + pattern.toString();
 			String suffix = fileNameBase.substring(indexOfName);
