@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,10 +51,15 @@ public class MainFrame extends JFrame {
 	private JRadioButton pattern3;
 
 	public MainFrame() throws IOException {
-		upArrow = ImageIO.read(new File("src\\main\\resources\\upArrow.png"));
-		downArrow = ImageIO.read(new File("src\\main\\resources\\downArrow.png"));
+		upArrow = ImageIO.read(getInputStream("upArrow.png"));
+		downArrow = ImageIO.read(getInputStream("downArrow.png"));
 
 		createAndShowGui();
+	}
+	
+	private InputStream getInputStream(String path) {
+		InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(path);
+		return resourceAsStream;
 	}
 
 	private void createAndShowGui() {
