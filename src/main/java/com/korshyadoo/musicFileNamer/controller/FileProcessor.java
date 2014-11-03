@@ -1,8 +1,12 @@
-package com.korshyadoo.musicFileNamer;
+package com.korshyadoo.musicFileNamer.controller;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.korshyadoo.musicFileNamer.model.Mode;
+import com.korshyadoo.musicFileNamer.model.PrefixFormats;
+import com.korshyadoo.musicFileNamer.view.MainFrame;
 
 public class FileProcessor {
 	final private List<String> fileList;

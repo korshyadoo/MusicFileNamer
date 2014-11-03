@@ -1,5 +1,5 @@
 *.class
-
+app.log
 target/
 dependency-reduced-pom.xml
 

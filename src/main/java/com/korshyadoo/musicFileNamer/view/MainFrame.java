@@ -1,4 +1,4 @@
-package com.korshyadoo.musicFileNamer;
+package com.korshyadoo.musicFileNamer.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -38,6 +38,11 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
 import com.korshyadoo.musicFileNamer.conf.Configuration;
+import com.korshyadoo.musicFileNamer.controller.FileProcessor;
+import com.korshyadoo.musicFileNamer.controller.LookAndFeelController;
+import com.korshyadoo.musicFileNamer.controller.ProgramLauncher;
+import com.korshyadoo.musicFileNamer.model.Mode;
+import com.korshyadoo.musicFileNamer.model.PrefixFormats;
 
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
@@ -105,13 +110,13 @@ public class MainFrame extends JFrame {
 		btnBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Open a file browser to choose a location
-				LookAndFeel previousLF = UIManager.getLookAndFeel();
-				ProgramLauncher.setLookAndFeel("Nimbus");
-				JFileChooser fc = new JFileChooser();
+				final LookAndFeel previousLF = UIManager.getLookAndFeel();
+				LookAndFeelController.setLookAndFeel(LookAndFeelController.NIMBUS);
+				final JFileChooser fc = new JFileChooser();
 				fc.setCurrentDirectory(ProgramLauncher.config.getDefaultDirectory());
 				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				int returnVal = fc.showDialog(MainFrame.this, "Select");
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
+				if(returnVal == JFileChooser.APPROVE_OPTION) {
 					MainFrame.setSelectedDirectory(fc.getSelectedFile());
 					boolean noFiles = hasOnlyDirectories(selectedDirectory);
 					if(noFiles) {
@@ -124,7 +129,7 @@ public class MainFrame extends JFrame {
 					MainFrame.this.btnSave.setEnabled(true);
 					MainFrame.this.btnRestart.setEnabled(true);
 				}
-				ProgramLauncher.setLookAndFeel(previousLF);
+				LookAndFeelController.setLookAndFeel(previousLF);
 			}
 		});
 		browsePanel.add(btnBrowse, BorderLayout.EAST);
@@ -151,7 +156,7 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void intervalRemoved(ListDataEvent e) {
-				if (listModel.size() == 0) {
+				if(listModel.size() == 0) {
 					System.out.println("removing scrollpane");
 					listPanel.remove(scrollPane);
 					listVisible = false;
@@ -162,7 +167,7 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void intervalAdded(ListDataEvent e) {
-				if (!listVisible) {
+				if(!listVisible) {
 					listPanel.remove(lblClickBrowse);
 					System.out.println("adding scrollpane");
 					listPanel.add(scrollPane, BorderLayout.CENTER);
@@ -248,7 +253,7 @@ public class MainFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				int result = JOptionPane.showConfirmDialog(MainFrame.this, "Are you sure you want to restart?", "Restart?", JOptionPane.YES_NO_OPTION,
 						JOptionPane.QUESTION_MESSAGE);
-				if (result == JOptionPane.YES_OPTION) {
+				if(result == JOptionPane.YES_OPTION) {
 					// Yes was selected from the confirm dialog. Reset the JList contents
 					loadListPanelContents();
 				}
@@ -298,7 +303,7 @@ public class MainFrame extends JFrame {
 		String li = "<li>";
 		String endLi = "</li>";
 		StringBuilder result = new StringBuilder("<html>The new file names will be:<br><ol style=\"list-style-type: disc\">");
-		for (int index = 0; index < list.size(); index++) {
+		for(int index = 0; index < list.size(); index++) {
 			result = result.append(li + list.get(index) + endLi);
 		}
 		result = result.append("</html>");
@@ -324,7 +329,7 @@ public class MainFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int currentIndex = lstFileList.getSelectedIndex();
-				if (currentIndex > 0) {
+				if(currentIndex > 0) {
 					String valueAtCurrentIndex = lstFileList.getSelectedValue();
 					lstFileList.setSelectedIndex(currentIndex - 1);
 					String valueAtNewIndex = lstFileList.getSelectedValue();
@@ -355,7 +360,7 @@ public class MainFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int currentIndex = lstFileList.getSelectedIndex();
-				if (currentIndex < (listModel.getSize() - 1)) {
+				if(currentIndex < (listModel.getSize() - 1)) {
 					final String valueAtCurrentIndex = lstFileList.getSelectedValue();
 					lstFileList.setSelectedIndex(currentIndex + 1);
 					final String valueAtNewIndex = lstFileList.getSelectedValue();
@@ -369,7 +374,7 @@ public class MainFrame extends JFrame {
 	}
 
 	private void updateDirectoryTextField() {
-		if (selectedDirectory != null) {
+		if(selectedDirectory != null) {
 			txtDirectory.setText(selectedDirectory.toString());
 		} else {
 			txtDirectory.setText("");
@@ -380,17 +385,17 @@ public class MainFrame extends JFrame {
 		// Load the list of files from selectedDirectory into the listPanel
 		listModel.clear();
 		File[] listOfFiles = selectedDirectory.listFiles();
-		switch (mode) {
+		switch(mode) {
 		case RENAME_FILES:
-			for (File file : listOfFiles) {
-				if (!file.isDirectory() && !file.isHidden()) {
+			for(File file : listOfFiles) {
+				if(!file.isDirectory() && !file.isHidden()) {
 					listModel.addElement(file.getName());
 				}
 			}
 			break;
 		case RENAME_DIRECTORIES:
-			for (File file : listOfFiles) {
-				if (file.isDirectory() && !file.isHidden()) {
+			for(File file : listOfFiles) {
+				if(file.isDirectory() && !file.isHidden()) {
 					listModel.addElement(file.getName());
 				}
 			}
@@ -407,11 +412,11 @@ public class MainFrame extends JFrame {
 		public void actionPerformed(ActionEvent e) {
 			// Validate the input
 			startingNumberInput = MainFrame.this.txtNumberInput.getText();
-			if (isValidNumberInput()) {
+			if(isValidNumberInput()) {
 				System.out.println("Processing Number: " + startingNumberInput);
 
 				// Display confirmation window
-				if (isConfirmed()) {
+				if(isConfirmed()) {
 					// Process the file name changes and refresh the front-end list
 					fileProcessor.upateFiles();
 					loadListPanelContents();
@@ -422,12 +427,12 @@ public class MainFrame extends JFrame {
 		private boolean isValidNumberInput() {
 			try {
 				int startingNumber = Integer.parseInt(startingNumberInput);
-				if (startingNumber < 0 || startingNumber > 999) {
+				if(startingNumber < 0 || startingNumber > 999) {
 					return false;
 				} else {
 					return true;
 				}
-			} catch (NumberFormatException ex) {
+			} catch(NumberFormatException ex) {
 				return false;
 			}
 		}
@@ -435,7 +440,7 @@ public class MainFrame extends JFrame {
 		private boolean isConfirmed() {
 			// Get the list of files from the front-end
 			List<String> frontEndList = new ArrayList<>();
-			for (int index = 0; index < listModel.getSize(); index++) {
+			for(int index = 0; index < listModel.getSize(); index++) {
 				frontEndList.add(listModel.get(index));
 			}
 
@@ -448,7 +453,7 @@ public class MainFrame extends JFrame {
 			int result = JOptionPane.showOptionDialog(MainFrame.this, generateMessageText(proposedList), "Confirm", JOptionPane.YES_NO_OPTION,
 					JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 
-			if (result == JOptionPane.YES_OPTION) {
+			if(result == JOptionPane.YES_OPTION) {
 				return true;
 			} else {
 				return false;
@@ -458,11 +463,11 @@ public class MainFrame extends JFrame {
 	}
 
 	private PrefixFormats getSelectedPattern() {
-		if (pattern1.isSelected()) {
+		if(pattern1.isSelected()) {
 			return PrefixFormats.PATTERN1;
-		} else if (pattern2.isSelected()) {
+		} else if(pattern2.isSelected()) {
 			return PrefixFormats.PATTERN2;
-		} else if (pattern3.isSelected()) {
+		} else if(pattern3.isSelected()) {
 			return PrefixFormats.PATTERN3;
 		} else {
 			return null;

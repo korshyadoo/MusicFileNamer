@@ -24,6 +24,9 @@ public class DevConfiguration implements Configuration {
 		File file = new File("C:\\Users\\jmatthews\\Google Drive\\MusicFileNamer\\testFolder");
 		return file;
 	}
-	
-	
+
+	@Override
+	public String getLoggingLevel() {
+		return "debug";
+	}
 }

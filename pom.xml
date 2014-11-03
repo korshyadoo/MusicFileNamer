@@ -33,7 +33,7 @@
 						<configuration>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.korshyadoo.musicFileNamer.ProgramLauncher</mainClass>
+									<mainClass>com.korshyadoo.musicFileNamer.controller.ProgramLauncher</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>
@@ -56,6 +56,17 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 			<version>4.1.1.RELEASE</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>2.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.0.1</version>
 		</dependency>
 	</dependencies>
 

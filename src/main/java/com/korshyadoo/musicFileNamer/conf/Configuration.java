@@ -8,4 +8,5 @@ public interface Configuration {
 	public int getMainWindowWidth();
 	public int getMainWindowHeight();
 	public File getDefaultDirectory();
+	public String getLoggingLevel();
 }

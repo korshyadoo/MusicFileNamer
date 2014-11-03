@@ -1,4 +1,4 @@
-package com.korshyadoo.musicFileNamer;
+package com.korshyadoo.musicFileNamer.model;
 
 public enum PrefixFormats {
 	PATTERN1 {
