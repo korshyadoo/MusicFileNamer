@@ -10,11 +10,9 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -37,23 +35,26 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
-import com.korshyadoo.musicFileNamer.conf.Configuration;
+import org.apache.logging.log4j.Logger;
+
 import com.korshyadoo.musicFileNamer.controller.FileProcessor;
 import com.korshyadoo.musicFileNamer.controller.LookAndFeelController;
 import com.korshyadoo.musicFileNamer.controller.ProgramLauncher;
+import com.korshyadoo.musicFileNamer.model.Images;
 import com.korshyadoo.musicFileNamer.model.Mode;
 import com.korshyadoo.musicFileNamer.model.PrefixFormats;
+import com.korshyadoo.musicFileNamer.model.PropertiesModel;
 
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 4884885745124721080L;
 
+	private static File selectedDirectory = null;
 	private Mode mode;
 	private JPanel contentPane;
-	private static File selectedDirectory = null;
 	private JTextField txtDirectory;
-	private BufferedImage upArrow;
-	private BufferedImage downArrow;
+	private final BufferedImage upArrow;
+	private final BufferedImage downArrow;
 	private DefaultListModel<String> listModel = new DefaultListModel<>();
 	private JList<String> lstFileList;
 	private JButton btnSave;
@@ -66,41 +67,43 @@ public class MainFrame extends JFrame {
 	private JLabel lblClickBrowse;
 	private JPanel listPanel;
 	private boolean listVisible;
-	private final Logger logger  = ProgramLauncher.getLogger();
+	private final Logger logger = ProgramLauncher.getLogger();
+	private FileProcessor fileProcessor;
+	private PropertiesModel properties = PropertiesModel.getInstance();
 
 	public MainFrame() throws IOException {
-		upArrow = ImageIO.read(getInputStream("upArrow.png"));
-		downArrow = ImageIO.read(getInputStream("downArrow.png"));
+		String version = properties.getProperty(PropertiesModel.VERSION_PROPERTY);
+		this.setTitle("Version: " + version);
+		logger.debug("Version: " + version);
+
+		Images images = Images.getInstance();
+		upArrow = images.getUpArrow();
+		downArrow = images.getDownArrow();
 
 		createAndShowGui();
 	}
 
-	private InputStream getInputStream(String path) {
-		InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(path);
-		return resourceAsStream;
-	}
-
 	private void createAndShowGui() {
-		Configuration config = ProgramLauncher.config;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
-		setBounds(config.getMainWindowX(), config.getMainWindowY(), config.getMainWindowWidth(), config.getMainWindowHeight());
-		// setBounds(100, 200, 400, 400);
+		PropertiesModel properties = ProgramLauncher.getProperties();
+		setBounds(properties.getProperty(PropertiesModel.MAIN_WINDOW_X_PROPERTY), 
+				properties.getProperty(PropertiesModel.MAIN_WINDOW_Y_PROPERTY), 
+				properties.getProperty(PropertiesModel.MAIN_WINDOW_WIDTH_PROPERTY), 
+				properties.getProperty(PropertiesModel.MAIN_WINDOW_HEIGHT_PROPERTY));
 		contentPane = new JPanel();
-		// contentPane.setBorder(BorderFactory.createLineBorder(Color.black));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 
-		createBrowsePanel();
-		createListPanel();
-		createBottomPanel();
+		contentPane.add(createBrowsePanel(), BorderLayout.NORTH);
+		contentPane.add(createListPanel(), BorderLayout.CENTER);
+		contentPane.add(createBottomPanel(), BorderLayout.SOUTH);
 	}
 
-	private void createBrowsePanel() {
+	private JPanel createBrowsePanel() {
 		JPanel browsePanel = new JPanel();
 		browsePanel.setLayout(new BorderLayout(0, 0));
-		contentPane.add(browsePanel, BorderLayout.NORTH);
 
 		txtDirectory = new JTextField("");
 		txtDirectory.setEditable(false);
@@ -108,23 +111,31 @@ public class MainFrame extends JFrame {
 
 		JButton btnBrowse = new JButton("Browse");
 		btnBrowse.addActionListener(new ActionListener() {
+			
+			// Open a file browser to choose a location
 			public void actionPerformed(ActionEvent e) {
-				// Open a file browser to choose a location
-				final LookAndFeel previousLF = UIManager.getLookAndFeel();
-				LookAndFeelController.setLookAndFeel(LookAndFeelController.NIMBUS);
+				final LookAndFeel previousLF = UIManager.getLookAndFeel();				//Stores the current LAF for later use
+				LookAndFeelController.setLookAndFeel(LookAndFeelController.NIMBUS);		//Switch to a new LAF
+				
 				final JFileChooser fc = new JFileChooser();
-				fc.setCurrentDirectory(ProgramLauncher.config.getDefaultDirectory());
+//				fc.setCurrentDirectory(ProgramLauncher.config.getDefaultDirectory());
+				File defaultDirectory = new File(properties.getProperty(PropertiesModel.DEFAULT_DIRECTORY_PROPERTY));
+				if(!defaultDirectory.exists()) {
+					//Get the home folder
+					
+				}
+				fc.setCurrentDirectory(defaultDirectory);
 				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				int returnVal = fc.showDialog(MainFrame.this, "Select");
 				if(returnVal == JFileChooser.APPROVE_OPTION) {
 					logger.debug("FileChooser selected: " + fc.getSelectedFile().toString());
-					
-					//If the selected File is a file, use the parent directory instead
+
+					// If the selected File is a file, use the parent directory instead
 					File selectedFile = (fc.getSelectedFile().isDirectory()) ? fc.getSelectedFile() : new File(fc.getSelectedFile().getParent());
-					
-					MainFrame.setSelectedDirectory(selectedFile);
+
 					logger.debug("selectedFile converted to: " + selectedFile.toString());
-					
+
+					MainFrame.selectedDirectory = selectedFile;
 					boolean noFiles = hasOnlyDirectories(selectedDirectory);
 					if(noFiles) {
 						mode = Mode.RENAME_DIRECTORIES;
@@ -140,6 +151,8 @@ public class MainFrame extends JFrame {
 			}
 		});
 		browsePanel.add(btnBrowse, BorderLayout.EAST);
+		
+		return browsePanel;
 	}
 
 	private boolean hasOnlyDirectories(File file) {
@@ -154,10 +167,9 @@ public class MainFrame extends JFrame {
 		return result;
 	}
 
-	private void createListPanel() {
+	private JPanel createListPanel() {
 		listPanel = new JPanel();
 		listPanel.setLayout(new BorderLayout(0, 0));
-		contentPane.add(listPanel, BorderLayout.CENTER);
 		lstFileList = new JList<>(listModel);
 		listModel.addListDataListener(new ListDataListener() {
 
@@ -192,12 +204,13 @@ public class MainFrame extends JFrame {
 		lblClickBrowse.setForeground(Color.RED);
 
 		listPanel.add(lblClickBrowse, BorderLayout.CENTER);
+		
+		return listPanel;
 	}
 
-	private void createBottomPanel() {
+	private JPanel createBottomPanel() {
 		JPanel bottomPanel = new JPanel();
 		bottomPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-		contentPane.add(bottomPanel, BorderLayout.SOUTH);
 
 		Border bottomPanelComponenetBorder = BorderFactory.createEmptyBorder(0, 5, 0, 5);
 
@@ -208,6 +221,8 @@ public class MainFrame extends JFrame {
 		JPanel inputPanel = createInputPanel();
 		inputPanel.setBorder(bottomPanelComponenetBorder);
 		bottomPanel.add(inputPanel);
+		
+		return bottomPanel;
 	}
 
 	private JPanel createInputPanel() {
@@ -413,14 +428,13 @@ public class MainFrame extends JFrame {
 
 	private class SaveButtonActionListener implements ActionListener {
 		private String startingNumberInput;
-		private FileProcessor fileProcessor;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			// Validate the input
 			startingNumberInput = MainFrame.this.txtNumberInput.getText();
 			if(isValidNumberInput()) {
-				logger.debug("Processing Number: " + startingNumberInput);
+				logger.debug("Processing start number: " + startingNumberInput);
 
 				// Display confirmation window
 				if(isConfirmed()) {
@@ -428,6 +442,9 @@ public class MainFrame extends JFrame {
 					fileProcessor.upateFiles();
 					loadListPanelContents();
 				}
+			} else {
+				logger.error("Save button was pressed with invalid starting number: " + startingNumberInput);
+				JOptionPane.showMessageDialog(MainFrame.this, "Enter a valid starting number");
 			}
 		}
 
@@ -484,9 +501,4 @@ public class MainFrame extends JFrame {
 	public static File getSelectedDirectory() {
 		return selectedDirectory;
 	}
-
-	public static void setSelectedDirectory(File selectedDirectory) {
-		MainFrame.selectedDirectory = selectedDirectory;
-	}
-
 }
