@@ -4,10 +4,14 @@
 		<File name="File" fileName="src/main/logs/app.log">
 			<PatternLayout pattern="%d{MM/dd/yyyy - HH:mm:ss.SSS} [%t] %-5level %C - %msg%n" />
 		</File>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{MM/dd/yyyy - HH:mm:ss.SSS} [%t] %-5level %C - %msg%n" />
+		</Console>
 	</Appenders>
 	<Loggers>
 		<Root level="debug">
 			<AppenderRef ref="File" />
+			<AppenderRef ref="Console" />
 		</Root>
 	</Loggers>
 </Configuration>
