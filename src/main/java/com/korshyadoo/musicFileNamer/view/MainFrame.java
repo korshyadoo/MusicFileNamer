@@ -117,7 +117,10 @@ public class MainFrame extends JFrame {
 				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				int returnVal = fc.showDialog(MainFrame.this, "Select");
 				if(returnVal == JFileChooser.APPROVE_OPTION) {
-					MainFrame.setSelectedDirectory(fc.getSelectedFile());
+					//If the selected File is a file, use the parent directory instead
+					File selectedFile = (fc.getSelectedFile().isDirectory()) ? fc.getSelectedFile() : new File(fc.getSelectedFile().getParent());
+					
+					MainFrame.setSelectedDirectory(selectedFile);
 					boolean noFiles = hasOnlyDirectories(selectedDirectory);
 					if(noFiles) {
 						mode = Mode.RENAME_DIRECTORIES;
