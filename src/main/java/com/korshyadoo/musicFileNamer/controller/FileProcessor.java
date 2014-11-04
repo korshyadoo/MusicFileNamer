@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.Logger;
+
 import com.korshyadoo.musicFileNamer.model.Mode;
 import com.korshyadoo.musicFileNamer.model.PrefixFormats;
 import com.korshyadoo.musicFileNamer.view.MainFrame;
@@ -15,6 +17,7 @@ public class FileProcessor {
 	private int numberOfDigits;
 	private PrefixFormats pattern;
 	private Mode mode;
+	private final Logger logger = ProgramLauncher.getLogger();
 
 	public FileProcessor(List<String> fileList, int startingNumber, PrefixFormats pattern, Mode mode) {
 		this.fileList = fileList;
@@ -22,7 +25,7 @@ public class FileProcessor {
 		this.pattern = pattern;
 		this.mode = mode;
 		numberOfDigits = findNumberOfDigitsIn(startingNumber);
-		System.out.println("number of digits: " + numberOfDigits);
+		logger.debug("number of digits: " + numberOfDigits);
 		processList();
 	}
 
@@ -185,18 +188,18 @@ public class FileProcessor {
 	 * @return {@code true} if successful; otherwise {@code false}
 	 */
 	public void upateFiles() {
-		System.out.println("Updating files");
+		logger.debug("Updating files");
 		for (int index = 0; index < fileList.size(); index++) {
 			File oldFile = new File(MainFrame.getSelectedDirectory().toString() + "\\" + fileList.get(index));
 			File newFile = new File(MainFrame.getSelectedDirectory().toString() + "\\" + proposedList.get(index));
 			if (newFile.exists()) {
 				// Can't rename the file because the new filename already exists
-				System.out.println("Can't rename the file because the new filename already exists");
+				logger.error("Can't rename the file because the new filename already exists");
 			} else {
 				boolean success = oldFile.renameTo(newFile);
 				if (!success) {
 					boolean canWrite = oldFile.canWrite();
-					System.out.println("Renamed failed: canWrite() = " + canWrite);
+					logger.error("Renamed failed: canWrite() = " + canWrite);
 				}
 			}
 		}

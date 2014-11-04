@@ -66,6 +66,7 @@ public class MainFrame extends JFrame {
 	private JLabel lblClickBrowse;
 	private JPanel listPanel;
 	private boolean listVisible;
+	private final Logger logger  = ProgramLauncher.getLogger();
 
 	public MainFrame() throws IOException {
 		upArrow = ImageIO.read(getInputStream("upArrow.png"));
@@ -98,7 +99,6 @@ public class MainFrame extends JFrame {
 
 	private void createBrowsePanel() {
 		JPanel browsePanel = new JPanel();
-		// browsePanel.setBorder(BorderFactory.createLineBorder(Color.black));
 		browsePanel.setLayout(new BorderLayout(0, 0));
 		contentPane.add(browsePanel, BorderLayout.NORTH);
 
@@ -117,10 +117,14 @@ public class MainFrame extends JFrame {
 				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				int returnVal = fc.showDialog(MainFrame.this, "Select");
 				if(returnVal == JFileChooser.APPROVE_OPTION) {
+					logger.debug("FileChooser selected: " + fc.getSelectedFile().toString());
+					
 					//If the selected File is a file, use the parent directory instead
 					File selectedFile = (fc.getSelectedFile().isDirectory()) ? fc.getSelectedFile() : new File(fc.getSelectedFile().getParent());
 					
 					MainFrame.setSelectedDirectory(selectedFile);
+					logger.debug("selectedFile converted to: " + selectedFile.toString());
+					
 					boolean noFiles = hasOnlyDirectories(selectedDirectory);
 					if(noFiles) {
 						mode = Mode.RENAME_DIRECTORIES;
@@ -160,7 +164,7 @@ public class MainFrame extends JFrame {
 			@Override
 			public void intervalRemoved(ListDataEvent e) {
 				if(listModel.size() == 0) {
-					System.out.println("removing scrollpane");
+					logger.debug("removing scrollpane");
 					listPanel.remove(scrollPane);
 					listVisible = false;
 					listPanel.add(lblClickBrowse, BorderLayout.CENTER);
@@ -172,7 +176,7 @@ public class MainFrame extends JFrame {
 			public void intervalAdded(ListDataEvent e) {
 				if(!listVisible) {
 					listPanel.remove(lblClickBrowse);
-					System.out.println("adding scrollpane");
+					logger.debug("adding scrollpane");
 					listPanel.add(scrollPane, BorderLayout.CENTER);
 					listVisible = true;
 					listPanel.validate();
@@ -416,7 +420,7 @@ public class MainFrame extends JFrame {
 			// Validate the input
 			startingNumberInput = MainFrame.this.txtNumberInput.getText();
 			if(isValidNumberInput()) {
-				System.out.println("Processing Number: " + startingNumberInput);
+				logger.debug("Processing Number: " + startingNumberInput);
 
 				// Display confirmation window
 				if(isConfirmed()) {
