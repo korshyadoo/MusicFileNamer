@@ -37,6 +37,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
+import org.apache.logging.log4j.Logger;
+
 import com.korshyadoo.musicFileNamer.conf.Configuration;
 import com.korshyadoo.musicFileNamer.controller.FileProcessor;
 import com.korshyadoo.musicFileNamer.controller.LookAndFeelController;
