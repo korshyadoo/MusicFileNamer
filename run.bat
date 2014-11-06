@@ -1,0 +1,1 @@
+call java -jar -Dlog4j.configurationFile=loggerConfig-dev.xml MusicFileNamer-0.2-SNAPSHOT.jar
