@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -394,6 +396,11 @@ public class MainFrame extends JFrame {
 		// Load the list of files from selectedDirectory into the listPanel
 		listModel.clear();
 		File[] listOfFiles = selectedDirectory.listFiles();
+		Arrays.sort(listOfFiles, new Comparator<File>() { 		// Sort the file list alphabetically
+					public int compare(File a, File b) {
+						return a.getName().compareTo(b.getName());
+					}
+				});
 		switch(mode) {
 		case RENAME_FILES:
 			for(File file : listOfFiles) {
