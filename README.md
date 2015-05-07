@@ -10,4 +10,4 @@ MusicFileNamer
 	<li>song files contained within the folders follow the same naming conventions as the folders</li>
     </ol>
 
-&nbsp;&nbsp;&nbsp;&nbsp; This app is to facilitate making changes, such as adding a song to an existing folder or changing the order of songs in a folder. After the new files have been copied to the thumb drive, open the app and arrange the songs in the order you would like and click "Save". The app will then give the follows the correct number prefix in order to conform with the rules.
+&nbsp;&nbsp;&nbsp;&nbsp; This app is to facilitate making changes, such as adding a song to an existing folder or changing the order of songs in a folder. After the new files have been copied to the thumb drive, open the app and arrange the songs in the order you would like and click "Save". The app then names the files according to the naming rules listed above.
