@@ -1,10 +1,20 @@
 package com.korshyadoo.musicFileNamer.view;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
+import com.korshyadoo.musicFileNamer.conf.Configuration;
+import com.korshyadoo.musicFileNamer.controller.FileProcessor;
+import com.korshyadoo.musicFileNamer.controller.LookAndFeelController;
+import com.korshyadoo.musicFileNamer.controller.ProgramLauncher;
+import com.korshyadoo.musicFileNamer.model.Mode;
+import com.korshyadoo.musicFileNamer.model.PrefixFormats;
+import org.apache.logging.log4j.Logger;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -15,38 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-
-import javax.imageio.ImageIO;
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.LookAndFeel;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListDataListener;
-
-import org.apache.logging.log4j.Logger;
-
-import com.korshyadoo.musicFileNamer.conf.Configuration;
-import com.korshyadoo.musicFileNamer.controller.FileProcessor;
-import com.korshyadoo.musicFileNamer.controller.LookAndFeelController;
-import com.korshyadoo.musicFileNamer.controller.ProgramLauncher;
-import com.korshyadoo.musicFileNamer.model.Mode;
-import com.korshyadoo.musicFileNamer.model.PrefixFormats;
 
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
@@ -80,8 +58,7 @@ public class MainFrame extends JFrame {
 	}
 
 	private InputStream getInputStream(String path) {
-		InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(path);
-		return resourceAsStream;
+		return getClass().getClassLoader().getResourceAsStream(path);
 	}
 
 	private void createAndShowGui() {
@@ -111,37 +88,35 @@ public class MainFrame extends JFrame {
 		browsePanel.add(txtDirectory, BorderLayout.CENTER);
 
 		JButton btnBrowse = new JButton("Browse");
-		btnBrowse.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				// Open a file browser to choose a location
-				final LookAndFeel previousLF = UIManager.getLookAndFeel();
-				LookAndFeelController.setLookAndFeel(LookAndFeelController.NIMBUS);
-				final JFileChooser fc = new JFileChooser();
-				fc.setCurrentDirectory(ProgramLauncher.config.getDefaultDirectory());
-				fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-				int returnVal = fc.showDialog(MainFrame.this, "Select");
-				if(returnVal == JFileChooser.APPROVE_OPTION) {
-					logger.debug("FileChooser selected: " + fc.getSelectedFile().toString());
-					
-					//If the selected File is a file, use the parent directory instead
-					File selectedFile = (fc.getSelectedFile().isDirectory()) ? fc.getSelectedFile() : new File(fc.getSelectedFile().getParent());
-					
-					MainFrame.setSelectedDirectory(selectedFile);
-					logger.debug("selectedFile converted to: " + selectedFile.toString());
-					
-					boolean noFiles = hasOnlyDirectories(selectedDirectory);
-					if(noFiles) {
-						mode = Mode.RENAME_DIRECTORIES;
-					} else {
-						mode = Mode.RENAME_FILES;
-					}
-					updateDirectoryTextField();
-					loadListPanelContents();
-					MainFrame.this.btnSave.setEnabled(true);
-					MainFrame.this.btnRestart.setEnabled(true);
+		btnBrowse.addActionListener(actionEvent -> {
+			// Open a file browser to choose a location
+			final LookAndFeel previousLF = UIManager.getLookAndFeel();
+			LookAndFeelController.setLookAndFeel(LookAndFeelController.NIMBUS);
+			final JFileChooser fc = new JFileChooser();
+			fc.setCurrentDirectory(ProgramLauncher.config.getDefaultDirectory());
+			fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+			int returnVal = fc.showDialog(MainFrame.this, "Select");
+			if(returnVal == JFileChooser.APPROVE_OPTION) {
+				logger.debug("FileChooser selected: " + fc.getSelectedFile().toString());
+
+				//If the selected File is a file, use the parent directory instead
+				File selectedFile = (fc.getSelectedFile().isDirectory()) ? fc.getSelectedFile() : new File(fc.getSelectedFile().getParent());
+
+				MainFrame.setSelectedDirectory(selectedFile);
+				logger.debug("selectedFile converted to: " + selectedFile.toString());
+
+				boolean noFiles = hasOnlyDirectories(selectedDirectory);
+				if(noFiles) {
+					mode = Mode.RENAME_DIRECTORIES;
+				} else {
+					mode = Mode.RENAME_FILES;
 				}
-				LookAndFeelController.setLookAndFeel(previousLF);
+				updateDirectoryTextField();
+				loadListPanelContents();
+				MainFrame.this.btnSave.setEnabled(true);
+				MainFrame.this.btnRestart.setEnabled(true);
 			}
+			LookAndFeelController.setLookAndFeel(previousLF);
 		});
 		browsePanel.add(btnBrowse, BorderLayout.EAST);
 	}
@@ -259,15 +234,12 @@ public class MainFrame extends JFrame {
 		int restartHeight = (int) (btnUpArrow.getPreferredSize().getHeight());
 		Dimension restartDimension = new Dimension(restartWidth, restartHeight);
 		btnRestart.setPreferredSize(restartDimension);
-		btnRestart.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int result = JOptionPane.showConfirmDialog(MainFrame.this, "Are you sure you want to restart?", "Restart?", JOptionPane.YES_NO_OPTION,
-						JOptionPane.QUESTION_MESSAGE);
-				if(result == JOptionPane.YES_OPTION) {
-					// Yes was selected from the confirm dialog. Reset the JList contents
-					loadListPanelContents();
-				}
+		btnRestart.addActionListener(actionEvent -> {
+			int result = JOptionPane.showConfirmDialog(MainFrame.this, "Are you sure you want to restart?", "Restart?", JOptionPane.YES_NO_OPTION,
+					JOptionPane.QUESTION_MESSAGE);
+			if(result == JOptionPane.YES_OPTION) {
+				// Yes was selected from the confirm dialog. Reset the JList contents
+				loadListPanelContents();
 			}
 		});
 		btnRestart.setEnabled(false);
@@ -314,10 +286,10 @@ public class MainFrame extends JFrame {
 		String li = "<li>";
 		String endLi = "</li>";
 		StringBuilder result = new StringBuilder("<html>The new file names will be:<br><ol style=\"list-style-type: disc\">");
-		for(int index = 0; index < list.size(); index++) {
-			result = result.append(li + list.get(index) + endLi);
+		for (String s : list) {
+			result.append(li).append(s).append(endLi);
 		}
-		result = result.append("</html>");
+		result.append("</html>");
 		return result.toString();
 	}
 
@@ -336,17 +308,14 @@ public class MainFrame extends JFrame {
 
 		};
 
-		btnUpArrow.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int currentIndex = lstFileList.getSelectedIndex();
-				if(currentIndex > 0) {
-					String valueAtCurrentIndex = lstFileList.getSelectedValue();
-					lstFileList.setSelectedIndex(currentIndex - 1);
-					String valueAtNewIndex = lstFileList.getSelectedValue();
-					listModel.setElementAt(valueAtNewIndex, currentIndex);
-					listModel.setElementAt(valueAtCurrentIndex, currentIndex - 1);
-				}
+		btnUpArrow.addActionListener(actionEvent -> {
+			int currentIndex = lstFileList.getSelectedIndex();
+			if(currentIndex > 0) {
+				String valueAtCurrentIndex = lstFileList.getSelectedValue();
+				lstFileList.setSelectedIndex(currentIndex - 1);
+				String valueAtNewIndex = lstFileList.getSelectedValue();
+				listModel.setElementAt(valueAtNewIndex, currentIndex);
+				listModel.setElementAt(valueAtCurrentIndex, currentIndex - 1);
 			}
 		});
 
@@ -367,17 +336,14 @@ public class MainFrame extends JFrame {
 			}
 		};
 
-		btnDownArrow.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int currentIndex = lstFileList.getSelectedIndex();
-				if(currentIndex < (listModel.getSize() - 1)) {
-					final String valueAtCurrentIndex = lstFileList.getSelectedValue();
-					lstFileList.setSelectedIndex(currentIndex + 1);
-					final String valueAtNewIndex = lstFileList.getSelectedValue();
-					listModel.setElementAt(valueAtNewIndex, currentIndex);
-					listModel.setElementAt(valueAtCurrentIndex, currentIndex + 1);
-				}
+		btnDownArrow.addActionListener(actionEvent -> {
+			int currentIndex = lstFileList.getSelectedIndex();
+			if(currentIndex < (listModel.getSize() - 1)) {
+				final String valueAtCurrentIndex = lstFileList.getSelectedValue();
+				lstFileList.setSelectedIndex(currentIndex + 1);
+				final String valueAtNewIndex = lstFileList.getSelectedValue();
+				listModel.setElementAt(valueAtNewIndex, currentIndex);
+				listModel.setElementAt(valueAtCurrentIndex, currentIndex + 1);
 			}
 		});
 
@@ -396,11 +362,7 @@ public class MainFrame extends JFrame {
 		// Load the list of files from selectedDirectory into the listPanel
 		listModel.clear();
 		File[] listOfFiles = selectedDirectory.listFiles();
-		Arrays.sort(listOfFiles, new Comparator<File>() { 		// Sort the file list alphabetically
-					public int compare(File a, File b) {
-						return a.getName().compareTo(b.getName());
-					}
-				});
+		Arrays.sort(listOfFiles, Comparator.comparing(File::getName));
 		switch(mode) {
 		case RENAME_FILES:
 			for(File file : listOfFiles) {
@@ -443,11 +405,7 @@ public class MainFrame extends JFrame {
 		private boolean isValidNumberInput() {
 			try {
 				int startingNumber = Integer.parseInt(startingNumberInput);
-				if(startingNumber < 0 || startingNumber > 999) {
-					return false;
-				} else {
-					return true;
-				}
+				return startingNumber >= 0 && startingNumber <= 999;
 			} catch(NumberFormatException ex) {
 				return false;
 			}
@@ -469,11 +427,7 @@ public class MainFrame extends JFrame {
 			int result = JOptionPane.showOptionDialog(MainFrame.this, generateMessageText(proposedList), "Confirm", JOptionPane.YES_NO_OPTION,
 					JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 
-			if(result == JOptionPane.YES_OPTION) {
-				return true;
-			} else {
-				return false;
-			}
+			return result == JOptionPane.YES_OPTION;
 		}
 
 	}
