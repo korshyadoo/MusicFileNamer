@@ -4,6 +4,7 @@ target/
 .settings/
 .idea/
 *.iml
+TestFiles/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
