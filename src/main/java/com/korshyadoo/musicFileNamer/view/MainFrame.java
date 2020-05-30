@@ -44,6 +44,7 @@ public class MainFrame extends JFrame {
 	private JRadioButton pattern1;
 	private JRadioButton pattern2;
 	private JRadioButton pattern3;
+	private JRadioButton pattern4;
 	private JScrollPane scrollPane;
 	private JLabel lblClickBrowse;
 	private JPanel listPanel;
@@ -264,12 +265,14 @@ public class MainFrame extends JFrame {
 		pattern1.setSelected(true);
 		pattern2 = new JRadioButton(PrefixFormats.PATTERN2.getMessage());
 		pattern3 = new JRadioButton(PrefixFormats.PATTERN3.getMessage());
+		pattern4 = new JRadioButton(PrefixFormats.PATTERN4.getMessage());
 
 		// Add the buttons to a group
 		ButtonGroup group = new ButtonGroup();
 		group.add(pattern1);
 		group.add(pattern2);
 		group.add(pattern3);
+		group.add(pattern4);
 
 		// Create the panel and add the components to it
 		JPanel patternChooserPanel = new JPanel();
@@ -278,6 +281,7 @@ public class MainFrame extends JFrame {
 		patternChooserPanel.add(pattern1);
 		patternChooserPanel.add(pattern2);
 		patternChooserPanel.add(pattern3);
+		patternChooserPanel.add(pattern4);
 
 		return patternChooserPanel;
 	}
@@ -439,6 +443,8 @@ public class MainFrame extends JFrame {
 			return PrefixFormats.PATTERN2;
 		} else if(pattern3.isSelected()) {
 			return PrefixFormats.PATTERN3;
+		} else if(pattern4.isSelected()) {
+			return PrefixFormats.PATTERN4;
 		} else {
 			return null;
 		}

@@ -31,6 +31,16 @@ public enum PrefixFormats {
 		public String getMessage() {
 			return "## - fileName.ext (number, space, hyphen, space, file name)";
 		}
+	},
+	PATTERN4 {
+		@Override
+		public String toString() {
+			return "";
+		}
+
+		public String getMessage() {
+			return "fileName.ext (removes the prefix)";
+		}
 	};
 	
 	public abstract String getMessage();

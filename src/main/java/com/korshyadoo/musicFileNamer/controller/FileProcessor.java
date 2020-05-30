@@ -3,6 +3,7 @@ package com.korshyadoo.musicFileNamer.controller;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.Logger;
 
@@ -45,6 +46,10 @@ public class FileProcessor {
 	private void processList() {
 		proposedList = new ArrayList<>();
 
+		if (pattern == PrefixFormats.PATTERN4) {
+			processPattern4();
+		}
+
 		int count = startingNumber;
 		for (int index = 0; index < fileList.size(); index++) {
 			String fileNameBase;
@@ -59,11 +64,23 @@ public class FileProcessor {
 			}
 			int indexOfName = findIndexOfName(fileNameBase);
 			String prefix = convertToTwoDigit(count) + pattern.toString();
-			String suffix = fileNameBase.substring(indexOfName);
-			String newName = prefix + suffix + extension;
+			String songName = fileNameBase.substring(indexOfName);
+			String newName = prefix + songName + extension;
 			proposedList.add(newName);
 			count++;
 		}
+	}
+
+	private void processPattern4() {
+		// TODO fix findIndexOfName() so that it works with no pattern
+		proposedList = fileList.stream().map(fileName -> {
+			List<String> split = splitNameAndExtension(fileName);
+			String fileNameBase = split.get(0);
+			String extension = split.get(1);
+			int indexOfName = findIndexOfName(fileNameBase);
+			String songName = fileNameBase.substring(indexOfName);
+			return songName + extension;
+		}).collect(Collectors.toList());
 	}
 
 	private int indexOfFirstAlphaIn(String str) {
@@ -102,15 +119,9 @@ public class FileProcessor {
 	 * @return The index of the beginning of the name
 	 */
 	private int findIndexOfName(String fileName) {
-		// Find the index of the first '-'
 		int indexOfFirstHyphen = fileName.indexOf('-');
-
-		// Find the index of the first alpha character
 		int indexOfFirstAlpha = indexOfFirstAlphaIn(fileName);
-
-		// Find the index of the first whitespace character
 		int indexOfFirstWhitespace = indexOfFirstWhiteSpaceCharacterIn(fileName);
-
 		int nameIndex = -1;
 
 		// 1. Find a hyphen, if it has no words before it, then the first non-whitespace char after the hyphen starts the name
@@ -165,7 +176,10 @@ public class FileProcessor {
 	 * @return The name of the file at the passed index, without the extension
 	 */
 	private List<String> splitNameAndExtension(int index) {
-		String fileName = fileList.get(index);
+		return splitNameAndExtension(fileList.get(index));
+	}
+
+	private List<String> splitNameAndExtension(String fileName) {
 		int extensionIndex = fileName.lastIndexOf('.');
 		String extension = fileName.substring(extensionIndex);
 		if (extensionIndex != -1) {
